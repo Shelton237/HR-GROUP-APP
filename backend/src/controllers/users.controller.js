@@ -62,4 +62,15 @@ const remove = asyncHandler(async (req, res) => {
   res.status(204).send();
 });
 
-module.exports = { list, create, update, remove };
+const resetPassword = asyncHandler(async (req, res) => {
+  const user = await db.User.findByPk(req.params.id);
+  if (!user) throw new ApiError(404, "Utilisateur introuvable.");
+  const tempPassword = crypto.randomBytes(16).toString("base64").replace(/[^a-zA-Z0-9]/g, "").slice(0, 20);
+  user.passwordHash = bcrypt.hashSync(tempPassword, 10);
+  user.mustChangePassword = true;
+  await user.save();
+  // Same one-time-return pattern as create(): never stored/logged in plaintext afterwards.
+  res.json({ ...publicUser(user), tempPassword });
+});
+
+module.exports = { list, create, update, remove, resetPassword };

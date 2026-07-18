@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ListChecks, Wallet, Pencil, ClipboardCheck, GraduationCap, UserCog, Bell, Info, Plus, Trash2, Mail } from "lucide-react";
+import { ListChecks, Wallet, Pencil, ClipboardCheck, GraduationCap, UserCog, Bell, Info, Plus, Trash2, Mail, KeyRound } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { Btn } from "../components/ui/Btn";
@@ -9,7 +9,7 @@ import { inputCls, uid, BRAND, BRAND_DK } from "../lib/tokens";
 import { getSettings, updateSettings, getNotifications, updateNotifications } from "../api/settings";
 import { listCompanies } from "../api/companies";
 import { getAlerts } from "../api/dashboard";
-import { listUsers, createUser, updateUser, deleteUser } from "../api/users";
+import { listUsers, createUser, updateUser, deleteUser, resetUserPassword } from "../api/users";
 
 function SettingCard({ title, children, onDelete }) {
   return (
@@ -85,6 +85,12 @@ export default function SettingsView() {
   const removeUser = (id) => {
     setUsers((prev) => prev.filter((u) => u.id !== id));
     deleteUser(id).catch(() => {});
+  };
+  const resetPassword = async (u) => {
+    if (!confirm(`Réinitialiser le mot de passe de ${u.name} ?`)) return;
+    const res = await resetUserPassword(u.id);
+    setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, mustChangePassword: true } : x)));
+    alert(`Nouveau mot de passe temporaire pour ${res.email} : ${res.tempPassword}\n(à changer à la prochaine connexion)`);
   };
   const addUser = async () => {
     if (!newUser.name.trim() || !newUser.email.trim()) return;
@@ -451,6 +457,13 @@ export default function SettingsView() {
                   <option value="all">Toutes les sociétés</option>
                   <option value="custom">Sociétés choisies</option>
                 </select>
+                <button
+                  onClick={() => resetPassword(u)}
+                  title="Réinitialiser le mot de passe"
+                  className="text-slate-400 hover:text-amber-600"
+                >
+                  <KeyRound size={15} />
+                </button>
                 <button onClick={() => removeUser(u.id)} className="text-slate-400 hover:text-rose-500">
                   <Trash2 size={15} />
                 </button>

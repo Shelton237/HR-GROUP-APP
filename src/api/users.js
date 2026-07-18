@@ -31,3 +31,13 @@ export function updateUser(id, body) {
 export function deleteUser(id) {
   return api.del(`/users/${id}`);
 }
+
+/**
+ * POST /users/:id/reset-password  (Admin only)
+ * resp: { id, name, email, role, scope, active, mustChangePassword, tempPassword }
+ * Generates a new temporary password (mustChangePassword forced true) and
+ * returns it once — same one-time-reveal pattern as createUser.
+ */
+export function resetUserPassword(id) {
+  return api.post(`/users/${id}/reset-password`);
+}
