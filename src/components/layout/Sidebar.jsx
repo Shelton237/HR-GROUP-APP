@@ -51,9 +51,6 @@ export function Sidebar({ view, onNavigate }) {
           );
         })}
       </nav>
-      <div className="p-4 text-[11px] text-slate-500 border-t" style={{ borderColor: "rgba(255,255,255,.08)" }}>
-        Connecté à l'API — enregistrement côté serveur.
-      </div>
     </aside>
   );
 }
