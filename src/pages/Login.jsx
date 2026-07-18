@@ -78,9 +78,12 @@ export default function Login() {
     >
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center gap-3 mb-6">
-          <div className="px-4 py-2.5 rounded-xl" style={{ background: INK }}>
-            <img src={logo} alt="Thara Services" className="h-7 w-auto" />
-          </div>
+          <img
+            src={logo}
+            alt="Thara Services"
+            className="h-20 w-auto"
+            style={{ filter: "drop-shadow(0 2px 6px rgba(15,27,45,.25))" }}
+          />
           <div className="text-center">
             <div className="font-semibold leading-tight" style={{ color: INK }}>
               Gestion RH Groupe
