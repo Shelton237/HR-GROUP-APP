@@ -3,10 +3,11 @@ import { AlertTriangle, ShieldCheck } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { Btn } from "../components/ui/Btn";
-import { BRAND, INK, inputCls } from "../lib/tokens";
+import { INK, inputCls } from "../lib/tokens";
 import { useAuth } from "../auth/useAuth";
 import { changePassword } from "../api/auth";
 import { ApiError } from "../api/client";
+import logo from "../assets/logo.png";
 
 export default function Login() {
   const { login } = useAuth();
@@ -72,11 +73,11 @@ export default function Login() {
       style={{ background: "#F4F6F8", fontFamily: "ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" }}
     >
       <div className="w-full max-w-sm">
-        <div className="flex items-center gap-2.5 justify-center mb-6">
-          <div className="w-10 h-10 rounded-lg grid place-items-center font-bold text-white" style={{ background: BRAND }}>
-            G
+        <div className="flex flex-col items-center gap-3 mb-6">
+          <div className="px-4 py-2.5 rounded-xl" style={{ background: INK }}>
+            <img src={logo} alt="Thara Services" className="h-7 w-auto" />
           </div>
-          <div>
+          <div className="text-center">
             <div className="font-semibold leading-tight" style={{ color: INK }}>
               Gestion RH Groupe
             </div>

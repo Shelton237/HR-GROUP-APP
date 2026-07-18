@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { INK, INK_SOFT, BRAND, AMBER } from "../../lib/tokens";
 import { NAV } from "../../lib/nav";
 import { getAlerts } from "../../api/dashboard";
+import logo from "../../assets/logo.png";
 
 export function Sidebar({ view, onNavigate }) {
   const [alertCount, setAlertCount] = useState(0);
@@ -23,14 +24,10 @@ export function Sidebar({ view, onNavigate }) {
   return (
     <aside className="w-64 shrink-0 flex flex-col text-slate-300" style={{ background: INK }}>
       <div className="px-5 py-5 border-b" style={{ borderColor: "rgba(255,255,255,.08)" }}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg grid place-items-center font-bold text-white" style={{ background: BRAND }}>
-            G
-          </div>
-          <div>
-            <div className="text-white font-semibold leading-tight">Gestion RH Groupe</div>
-            <div className="text-[11px] text-slate-400">Multi-pays · multi-société</div>
-          </div>
+        <img src={logo} alt="Thara Services" className="h-8 w-auto" />
+        <div className="mt-2">
+          <div className="text-white font-semibold leading-tight text-sm">Gestion RH Groupe</div>
+          <div className="text-[11px] text-slate-400">Multi-pays · multi-société</div>
         </div>
       </div>
       <nav className="flex-1 p-3 space-y-1">
