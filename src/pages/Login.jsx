@@ -8,6 +8,7 @@ import { useAuth } from "../auth/useAuth";
 import { changePassword } from "../api/auth";
 import { ApiError } from "../api/client";
 import logo from "../assets/logo.png";
+import loginBg from "../assets/login-bg.jpg";
 
 export default function Login() {
   const { login } = useAuth();
@@ -70,7 +71,10 @@ export default function Login() {
   return (
     <div
       className="min-h-screen grid place-items-center p-4"
-      style={{ background: "#F4F6F8", fontFamily: "ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" }}
+      style={{
+        background: `linear-gradient(180deg, rgba(244,246,248,.55), rgba(244,246,248,.88)), url(${loginBg}) center/cover no-repeat fixed`,
+        fontFamily: "ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif",
+      }}
     >
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center gap-3 mb-6">
