@@ -185,7 +185,7 @@ export default function SettingsView() {
                   <label className="flex items-center gap-1 text-xs text-slate-500">
                     <input
                       type="checkbox"
-                      className="accent-teal-600"
+                      className="accent-[#E31E3D]"
                       checked={t.paid}
                       onChange={(e) => setS((x) => { x.leaveTypes[i].paid = e.target.checked; })}
                     />
@@ -222,7 +222,7 @@ export default function SettingsView() {
                   <label className="flex items-center gap-1 text-xs text-slate-500">
                     <input
                       type="checkbox"
-                      className="accent-teal-600"
+                      className="accent-[#E31E3D]"
                       checked={t.expires}
                       onChange={(e) => setS((x) => { x.documentCategories[i].expires = e.target.checked; })}
                     />
@@ -263,7 +263,7 @@ export default function SettingsView() {
                 <label className="flex items-center gap-1 text-xs text-slate-500">
                   <input
                     type="checkbox"
-                    className="accent-teal-600"
+                    className="accent-[#E31E3D]"
                     checked={p.taxable}
                     onChange={(e) => setS((x) => { x.payElements[i].taxable = e.target.checked; })}
                   />
@@ -272,7 +272,7 @@ export default function SettingsView() {
                 <label className="flex items-center gap-1 text-xs text-slate-500">
                   <input
                     type="checkbox"
-                    className="accent-teal-600"
+                    className="accent-[#E31E3D]"
                     checked={p.cotisable}
                     onChange={(e) => setS((x) => { x.payElements[i].cotisable = e.target.checked; })}
                   />
@@ -473,7 +473,7 @@ export default function SettingsView() {
                       <label key={c.id} className="flex items-center gap-1 text-xs text-slate-600">
                         <input
                           type="checkbox"
-                          className="accent-teal-600"
+                          className="accent-[#E31E3D]"
                           checked={(u.scope || []).includes(c.id)}
                           onChange={(e) => {
                             const sc = new Set(u.scope || []);
@@ -528,7 +528,7 @@ export default function SettingsView() {
                 <label key={k} className="flex items-center gap-2 text-sm text-slate-700">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 accent-teal-600"
+                    className="w-4 h-4 accent-[#E31E3D]"
                     checked={!!notifications.rules[k]}
                     onChange={(e) => setN((d) => { d.rules[k] = e.target.checked; })}
                   />

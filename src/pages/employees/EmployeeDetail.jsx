@@ -91,7 +91,7 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
             <label key={c.key} className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
               <input
                 type="checkbox"
-                className="w-4 h-4 accent-teal-600"
+                className="w-4 h-4 accent-[#E31E3D]"
                 checked={!!e.checklist?.[c.key]}
                 onChange={(ev) => {
                   const checked = ev.target.checked;

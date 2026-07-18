@@ -23,12 +23,8 @@ export function Sidebar({ view, onNavigate }) {
 
   return (
     <aside className="w-64 shrink-0 flex flex-col text-slate-300" style={{ background: INK }}>
-      <div className="px-5 py-5 border-b" style={{ borderColor: "rgba(255,255,255,.08)" }}>
-        <img src={logo} alt="Thara Services" className="h-8 w-auto" />
-        <div className="mt-2">
-          <div className="text-white font-semibold leading-tight text-sm">Gestion RH Groupe</div>
-          <div className="text-[11px] text-slate-400">Multi-pays · multi-société</div>
-        </div>
+      <div className="px-5 py-5 border-b flex justify-center" style={{ borderColor: "rgba(255,255,255,.08)" }}>
+        <img src={logo} alt="Thara Services" className="h-12 w-auto" />
       </div>
       <nav className="flex-1 p-3 space-y-1">
         {NAV.map((n) => {
@@ -41,7 +37,7 @@ export function Sidebar({ view, onNavigate }) {
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition"
               style={a ? { background: INK_SOFT, color: "#fff", boxShadow: `inset 3px 0 0 ${BRAND}` } : {}}
             >
-              <I size={18} className={a ? "text-teal-400" : "text-slate-400"} />
+              <I size={18} className={a ? "text-[#E31E3D]" : "text-slate-400"} />
               <span>{n.label}</span>
               {n.id === "dashboard" && alertCount > 0 && (
                 <span

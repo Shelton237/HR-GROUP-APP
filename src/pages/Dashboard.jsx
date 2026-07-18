@@ -6,12 +6,12 @@ import { Users, Wallet, Landmark, Bell, ChevronRight, Clock, ClipboardCheck, Fil
 import { Card } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Kpi } from "../components/ui/Kpi";
-import { BRAND, BRAND_DK, AMBER, ROSE } from "../lib/tokens";
+import { BRAND, BRAND_DK, BRAND_WASH, AMBER, ROSE } from "../lib/tokens";
 import { fmt } from "../lib/format";
 import { getAlerts, getSummary } from "../api/dashboard";
 
 const MiniStat = ({ label, value, strong }) => (
-  <div className={"rounded-lg px-3 py-2 " + (strong ? "" : "bg-slate-50")} style={strong ? { background: "#E6F2EF" } : {}}>
+  <div className={"rounded-lg px-3 py-2 " + (strong ? "" : "bg-slate-50")} style={strong ? { background: BRAND_WASH } : {}}>
     <div className="text-[11px] text-slate-500">{label}</div>
     <div className="text-sm font-semibold tabular-nums" style={strong ? { color: BRAND_DK } : {}}>
       {value}
@@ -100,7 +100,7 @@ export default function Dashboard({ onGoto }) {
               <button
                 key={r.companyId}
                 onClick={() => onGoto("employees", r.companyId)}
-                className="w-full text-left rounded-xl border border-slate-200 p-4 hover:border-teal-400 transition"
+                className="w-full text-left rounded-xl border border-slate-200 p-4 hover:border-[#E31E3D] transition"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-lg">{r.flag}</span>

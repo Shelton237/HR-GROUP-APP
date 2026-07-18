@@ -94,7 +94,7 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
               const ct = countryOf(comp?.countryCode);
               const missing = (ct?.checklist || []).filter((c) => !e.checklist?.[c.key]).length;
               return (
-                <tr key={e.id} onClick={() => setDetail(e.id)} className="border-b border-slate-100 hover:bg-teal-50/30 cursor-pointer">
+                <tr key={e.id} onClick={() => setDetail(e.id)} className="border-b border-slate-100 hover:bg-[#E31E3D]/5 cursor-pointer">
                   <td className="px-4 py-3">
                     <div className="font-medium text-slate-900">
                       {e.firstName} {e.lastName}

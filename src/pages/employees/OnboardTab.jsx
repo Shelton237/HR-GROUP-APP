@@ -45,7 +45,7 @@ export default function OnboardTab({ e, s, employeeId, onChanged }) {
             return (
               <div key={i} className="p-3 rounded-lg border border-slate-100">
                 <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 accent-teal-600" checked={!!done} onChange={(ev) => toggleStep(i, ev.target.checked)} />
+                  <input type="checkbox" className="w-4 h-4 accent-[#E31E3D]" checked={!!done} onChange={(ev) => toggleStep(i, ev.target.checked)} />
                   <span className="text-xs text-slate-400 w-24">{st.phase}</span>
                   <span className={"text-sm " + (done ? "text-slate-800" : "text-slate-500")}>{st.label}</span>
                   {done && (

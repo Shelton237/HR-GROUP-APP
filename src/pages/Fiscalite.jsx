@@ -166,7 +166,7 @@ export default function Fiscalite() {
             <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 cursor-pointer">
               <input
                 type="checkbox"
-                className="w-4 h-4 accent-teal-600"
+                className="w-4 h-4 accent-[#E31E3D]"
                 checked={country.validated}
                 onChange={(e) => mutBase((c) => { c.validated = e.target.checked; })}
               />

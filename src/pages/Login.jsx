@@ -3,7 +3,7 @@ import { AlertTriangle, ShieldCheck } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { Btn } from "../components/ui/Btn";
-import { INK, inputCls } from "../lib/tokens";
+import { inputCls } from "../lib/tokens";
 import { useAuth } from "../auth/useAuth";
 import { changePassword } from "../api/auth";
 import { ApiError } from "../api/client";
@@ -77,19 +77,13 @@ export default function Login() {
       }}
     >
       <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center gap-3 mb-6">
+        <div className="flex justify-center mb-6">
           <img
             src={logo}
             alt="Thara Services"
-            className="h-20 w-auto"
+            className="h-24 w-auto"
             style={{ filter: "drop-shadow(0 2px 6px rgba(15,27,45,.25))" }}
           />
-          <div className="text-center">
-            <div className="font-semibold leading-tight" style={{ color: INK }}>
-              Gestion RH Groupe
-            </div>
-            <div className="text-[11px] text-slate-400">Multi-pays · multi-société</div>
-          </div>
         </div>
 
         <Card className="p-6">

@@ -3,7 +3,7 @@ import { Check, Wallet, Landmark, Building2, Info } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Kpi } from "../components/ui/Kpi";
 import { Btn } from "../components/ui/Btn";
-import { inputCls, BRAND_DK, AMBER } from "../lib/tokens";
+import { inputCls, BRAND_DK, BRAND_WASH, AMBER } from "../lib/tokens";
 import { fmt, monthNow } from "../lib/format";
 import { listCompanies } from "../api/companies";
 import { getPayrollSummary, setPaymentStatus } from "../api/payroll";
@@ -116,7 +116,7 @@ export default function Payroll() {
                       <button
                         onClick={() => setStatus(r.employee.id, { validated: !r.status?.validated })}
                         className="px-2 py-1 rounded-md text-xs font-medium"
-                        style={r.status?.validated ? { background: "#E6F2EF", color: BRAND_DK } : { background: "#F1F5F9", color: "#64748B" }}
+                        style={r.status?.validated ? { background: BRAND_WASH, color: BRAND_DK } : { background: "#F1F5F9", color: "#64748B" }}
                       >
                         {r.status?.validated ? "Validé" : "À valider"}
                       </button>

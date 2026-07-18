@@ -1,5 +1,5 @@
 import { Card } from "./Card";
-import { INK, BRAND, AMBER } from "../../lib/tokens";
+import { INK, BRAND, BRAND_WASH, AMBER } from "../../lib/tokens";
 
 /* Shared KPI tile — used by Dashboard and Payroll views. */
 export function Kpi({ label, value, icon: Icon, hint, accent, tone }) {
@@ -15,7 +15,7 @@ export function Kpi({ label, value, icon: Icon, hint, accent, tone }) {
         </div>
         <div
           className="w-9 h-9 rounded-lg grid place-items-center shrink-0"
-          style={{ background: accent ? "rgba(255,255,255,.1)" : tone === "amber" ? "#FEF3C7" : "#E6F2EF" }}
+          style={{ background: accent ? "rgba(255,255,255,.1)" : tone === "amber" ? "#FEF3C7" : BRAND_WASH }}
         >
           <Icon size={18} style={{ color: accent ? "#fff" : tone === "amber" ? AMBER : BRAND }} />
         </div>
