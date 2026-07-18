@@ -33,7 +33,7 @@ export default function Login() {
     setBusy(true);
     try {
       const res = await login(email.trim(), password);
-      if (res?.mustChangePassword || res?.must_change_password) {
+      if (res?.user?.mustChangePassword) {
         setMustChangePassword(true);
       }
     } catch (e) {
