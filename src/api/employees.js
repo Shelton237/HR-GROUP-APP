@@ -10,12 +10,15 @@ import { api } from "./client";
  */
 function normalizeEmployee(e) {
   if (!e) return e;
-  const { customJson, onboarding, checklist, ...rest } = e;
+  const { customJson, onboarding, checklist, evaluations, ...rest } = e;
   return {
     ...rest,
     custom: customJson || {},
     onboarding: onboarding ? { ...onboarding, steps: onboarding.stepsJson || {} } : onboarding,
     checklist: Array.isArray(checklist) ? Object.fromEntries(checklist.map((c) => [c.key, !!c.done])) : checklist || {},
+    evaluations: Array.isArray(evaluations)
+      ? evaluations.map(({ scoresJson, ...ev }) => ({ ...ev, scores: scoresJson || {} }))
+      : evaluations,
   };
 }
 

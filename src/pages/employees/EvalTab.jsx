@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { Field } from "../../components/ui/Field";
 import { Btn } from "../../components/ui/Btn";
 import { Badge } from "../../components/ui/Badge";
@@ -12,10 +12,16 @@ export default function EvalTab({ e, s, employeeId, onChanged }) {
   const [scores, setScores] = useState({});
   const [dec, setDec] = useState(s.evalDecisions[0]);
   const [notes, setNotes] = useState("");
+  const [expanded, setExpanded] = useState({});
 
   const total = tpl ? Math.round(tpl.criteria.reduce((sum, c) => sum + ((Number(scores[c.label]) || 0) / 5) * c.weight, 0)) : 0;
+  const isRupture = dec === "Rupture";
 
   const add = async () => {
+    if (isRupture && !notes.trim()) {
+      alert("Merci de préciser le motif de la rupture (essai non concluant) dans les observations.");
+      return;
+    }
     await addEvaluation(employeeId, {
       templateId: tplId,
       date: new Date().toISOString().slice(0, 10),
@@ -25,8 +31,12 @@ export default function EvalTab({ e, s, employeeId, onChanged }) {
       notes,
       evaluator: "",
     });
+    // Confirmation or Rupture during probation resolve it one way or the other —
+    // mirrors the same status transition already used for onboarding decisions.
     if (dec === "Confirmation" && e.status === "Période d'essai") {
       await updateEmployee(employeeId, { status: "Actif" });
+    } else if (dec === "Rupture" && e.status !== "Sorti") {
+      await updateEmployee(employeeId, { status: "Sorti" });
     }
     setScores({});
     setNotes("");
@@ -89,11 +99,22 @@ export default function EvalTab({ e, s, employeeId, onChanged }) {
           </div>
         </div>
       )}
-      <Field label="Observations">
-        <textarea className={inputCls} rows={2} value={notes} onChange={(ev) => setNotes(ev.target.value)} />
+      <Field label={isRupture ? "Motif de la rupture (obligatoire)" : "Observations"}>
+        <textarea
+          className={inputCls + (isRupture && !notes.trim() ? " border-rose-400" : "")}
+          rows={isRupture ? 4 : 2}
+          placeholder={isRupture ? "Décrivez précisément les raisons de l'essai non concluant…" : ""}
+          value={notes}
+          onChange={(ev) => setNotes(ev.target.value)}
+        />
       </Field>
+      {isRupture && (
+        <div className="text-xs text-rose-700 bg-rose-50 rounded-lg p-2.5">
+          Enregistrer cette décision marquera automatiquement le salarié comme « Sorti ».
+        </div>
+      )}
       <div className="flex justify-end">
-        <Btn onClick={add}>
+        <Btn variant={isRupture ? "danger" : "primary"} onClick={add}>
           <Plus size={16} />
           Enregistrer l'évaluation
         </Btn>
@@ -102,9 +123,14 @@ export default function EvalTab({ e, s, employeeId, onChanged }) {
         {(e.evaluations || []).length === 0 && <div className="text-sm text-slate-400 text-center py-4">Aucune évaluation.</div>}
         {[...(e.evaluations || [])].reverse().map((ev) => {
           const t = s.evalTemplates.find((x) => x.id === ev.templateId);
+          const isOpen = !!expanded[ev.id];
+          const hasScores = ev.scores && Object.keys(ev.scores).length > 0;
           return (
             <div key={ev.id} className="p-3 rounded-lg border border-slate-100">
-              <div className="flex items-center gap-2">
+              <button
+                className="w-full flex items-center gap-2 text-left"
+                onClick={() => setExpanded((x) => ({ ...x, [ev.id]: !x[ev.id] }))}
+              >
                 <Badge tone="teal">{t?.name || "Évaluation"}</Badge>
                 <span className="text-xs text-slate-500">{new Date(ev.date).toLocaleDateString("fr-FR")}</span>
                 <Badge tone={ev.decision === "Rupture" ? "rose" : ev.decision === "Confirmation" ? "green" : "amber"}>{ev.decision}</Badge>
@@ -113,8 +139,31 @@ export default function EvalTab({ e, s, employeeId, onChanged }) {
                     {ev.total}/100
                   </span>
                 )}
-              </div>
-              {ev.notes && <p className="text-sm text-slate-600 mt-2">{ev.notes}</p>}
+                {(hasScores || ev.notes) && (isOpen ? <ChevronUp size={15} className="text-slate-400" /> : <ChevronDown size={15} className="text-slate-400" />)}
+              </button>
+              {isOpen && (
+                <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
+                  {ev.evaluator && (
+                    <div className="text-xs text-slate-500">
+                      Évaluateur : <span className="text-slate-700">{ev.evaluator}</span>
+                    </div>
+                  )}
+                  {hasScores && t && (
+                    <div className="space-y-1.5">
+                      {t.criteria.map((c) => (
+                        <div key={c.label} className="flex items-center justify-between text-sm">
+                          <span className="text-slate-600">
+                            {c.label} <span className="text-xs text-slate-400">({c.weight}%)</span>
+                          </span>
+                          <span className="font-medium text-slate-800">{ev.scores[c.label] ?? "—"}/5</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {ev.notes && <p className="text-sm text-slate-600 whitespace-pre-wrap">{ev.notes}</p>}
+                  {!ev.notes && !hasScores && <p className="text-sm text-slate-400">Aucun détail supplémentaire.</p>}
+                </div>
+              )}
             </div>
           );
         })}

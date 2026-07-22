@@ -43,6 +43,7 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
   };
 
   const isOut = e.status === "Sorti";
+  const ruptureEval = isOut ? [...(e.evaluations || [])].reverse().find((ev) => ev.decision === "Rupture") : null;
   const toggleActive = () => {
     const next = isOut ? "Actif" : "Sorti";
     const label = isOut ? "réactiver" : "désactiver";
@@ -84,6 +85,25 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
           </Btn>
         </div>
       </div>
+      {ruptureEval && (
+        <div className="mb-4 p-3 rounded-lg border border-rose-200 bg-rose-50">
+          <div className="flex items-center gap-2 text-sm font-medium text-rose-800">
+            <UserX size={14} />
+            Essai non concluant — rupture du {new Date(ruptureEval.date).toLocaleDateString("fr-FR")}
+          </div>
+          {ruptureEval.notes ? (
+            <p className="text-sm text-rose-700 mt-1 whitespace-pre-wrap">{ruptureEval.notes}</p>
+          ) : (
+            <p className="text-sm text-rose-700/70 mt-1 italic">Aucun motif détaillé enregistré.</p>
+          )}
+          <button
+            className="text-xs font-medium text-rose-700 underline mt-1"
+            onClick={() => setTab("eval")}
+          >
+            Voir le détail dans l'onglet Évaluations
+          </button>
+        </div>
+      )}
       <div className="flex gap-1 border-b border-slate-200 mb-5 overflow-x-auto">
         {tabs.map((t) => (
           <button
