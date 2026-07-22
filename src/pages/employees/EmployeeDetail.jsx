@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Clock, Check } from "lucide-react";
+import { Clock, Check, UserX, UserCheck } from "lucide-react";
 import { Modal } from "../../components/ui/Modal";
 import { Badge } from "../../components/ui/Badge";
+import { Btn } from "../../components/ui/Btn";
 import { DocList } from "../../components/DocList";
 import { BRAND, BRAND_DK } from "../../lib/tokens";
 import { addMonths, monthNow } from "../../lib/format";
@@ -41,6 +42,14 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
     updateEmployee(e.id, fields).catch(() => {});
   };
 
+  const isOut = e.status === "Sorti";
+  const toggleActive = () => {
+    const next = isOut ? "Actif" : "Sorti";
+    const label = isOut ? "réactiver" : "désactiver";
+    if (!confirm(`Confirmer : ${label} ${e.firstName} ${e.lastName} ?`)) return;
+    patch({ status: next });
+  };
+
   const tabs = [
     { id: "infos", label: "Informations" },
     { id: "dossier", label: "Dossier & pièces" },
@@ -64,8 +73,15 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
             Essai → {addMonths(e.hireDate, e.probationMonths || 3).toLocaleDateString("fr-FR")}
           </Badge>
         )}
-        <div className="ml-auto text-sm text-slate-500">
-          Embauché le {e.hireDate ? new Date(e.hireDate).toLocaleDateString("fr-FR") : "—"}
+        {isOut && <Badge tone="rose">Sorti</Badge>}
+        <div className="ml-auto flex items-center gap-3">
+          <div className="text-sm text-slate-500">
+            Embauché le {e.hireDate ? new Date(e.hireDate).toLocaleDateString("fr-FR") : "—"}
+          </div>
+          <Btn variant={isOut ? "outline" : "danger"} onClick={toggleActive}>
+            {isOut ? <UserCheck size={15} /> : <UserX size={15} />}
+            {isOut ? "Réactiver" : "Désactiver"}
+          </Btn>
         </div>
       </div>
       <div className="flex gap-1 border-b border-slate-200 mb-5 overflow-x-auto">

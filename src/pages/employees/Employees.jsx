@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Search, Plus, Check, AlertTriangle } from "lucide-react";
+import { Search, Plus, Check, AlertTriangle, UserX, UserCheck } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Btn } from "../../components/ui/Btn";
 import { Badge } from "../../components/ui/Badge";
 import { inputCls } from "../../lib/tokens";
 import { fmt } from "../../lib/format";
-import { listEmployees } from "../../api/employees";
+import { listEmployees, updateEmployee } from "../../api/employees";
 import { listCompanies } from "../../api/companies";
 import { listCountries } from "../../api/countries";
 import { getSettings } from "../../api/settings";
@@ -40,6 +40,15 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
 
   const companyById = (id) => companies.find((c) => c.id === id);
   const countryOf = (code) => countries.find((c) => c.code === code);
+
+  const toggleActive = (ev, e) => {
+    ev.stopPropagation();
+    const isOut = e.status === "Sorti";
+    const next = isOut ? "Actif" : "Sorti";
+    const label = isOut ? "réactiver" : "désactiver";
+    if (!confirm(`Confirmer : ${label} ${e.firstName} ${e.lastName} ?`)) return;
+    updateEmployee(e.id, { status: next }).then(load);
+  };
 
   const list = employees.filter((e) => {
     if (companyFilter && e.companyId !== companyFilter) return false;
@@ -86,6 +95,7 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
               <th className="px-4 py-3 font-medium text-right">Brut / mois</th>
               <th className="px-4 py-3 font-medium">Dossier</th>
               <th className="px-4 py-3 font-medium">Statut</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -122,14 +132,32 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {e.status === "Période d'essai" ? <Badge tone="amber">Essai</Badge> : <Badge tone="green">Actif</Badge>}
+                    {e.status === "Période d'essai" ? (
+                      <Badge tone="amber">Essai</Badge>
+                    ) : e.status === "Sorti" ? (
+                      <Badge tone="rose">Sorti</Badge>
+                    ) : (
+                      <Badge tone="green">Actif</Badge>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={(ev) => toggleActive(ev, e)}
+                      title={e.status === "Sorti" ? "Réactiver" : "Désactiver"}
+                      className={
+                        "p-1.5 rounded-md " +
+                        (e.status === "Sorti" ? "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50" : "text-slate-400 hover:text-rose-600 hover:bg-rose-50")
+                      }
+                    >
+                      {e.status === "Sorti" ? <UserCheck size={15} /> : <UserX size={15} />}
+                    </button>
                   </td>
                 </tr>
               );
             })}
             {list.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-slate-400">
+                <td colSpan={7} className="px-4 py-10 text-center text-slate-400">
                   Aucun salarié.
                 </td>
               </tr>
