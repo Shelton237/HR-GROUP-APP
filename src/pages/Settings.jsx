@@ -173,6 +173,13 @@ export default function SettingsView() {
           <SettingCard title="Catégories socio-professionnelles">
             <StringListEditor items={s.categories} placeholder="Ex. Cadre" onChange={(v) => setS((x) => { x.categories = v; })} />
           </SettingCard>
+          <SettingCard title="Motifs de sortie">
+            <StringListEditor
+              items={s.exitReasons || []}
+              placeholder="Ex. Licenciement"
+              onChange={(v) => setS((x) => { x.exitReasons = v; })}
+            />
+          </SettingCard>
           <SettingCard title="Types de congé (avec acquisition)">
             <div className="space-y-2">
               {s.leaveTypes.map((t, i) => (

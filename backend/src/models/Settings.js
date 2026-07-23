@@ -42,6 +42,7 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 2,
         field: "max_emergency_contacts",
       },
+      exitReasons: { type: DataTypes.JSON, allowNull: false, defaultValue: [], field: "exit_reasons" },
     },
     {
       tableName: "settings",

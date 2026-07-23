@@ -19,6 +19,7 @@ const UPDATABLE_FIELDS = [
   "evalTemplates",
   "onboardingTemplates",
   "maxEmergencyContacts",
+  "exitReasons",
 ];
 
 const get = asyncHandler(async (req, res) => {

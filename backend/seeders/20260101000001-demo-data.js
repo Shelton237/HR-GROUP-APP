@@ -144,6 +144,15 @@ module.exports = {
             },
           ],
           maxEmergencyContacts: 2,
+          exitReasons: [
+            "Démission",
+            "Licenciement",
+            "Rupture période d'essai",
+            "Fin de contrat (CDD)",
+            "Rupture conventionnelle",
+            "Décès",
+            "Autre",
+          ],
         },
         { transaction: t }
       );

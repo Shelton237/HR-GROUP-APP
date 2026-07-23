@@ -89,6 +89,9 @@ const ALLOWED_EMPLOYEE_FIELDS = [
   "leaveBalance",
   "companyId",
   "customJson",
+  "exitDate",
+  "exitReason",
+  "exitNotes",
 ];
 
 const create = asyncHandler(async (req, res) => {

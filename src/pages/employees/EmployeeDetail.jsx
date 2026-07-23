@@ -4,6 +4,7 @@ import { Modal } from "../../components/ui/Modal";
 import { Badge } from "../../components/ui/Badge";
 import { Btn } from "../../components/ui/Btn";
 import { DocList } from "../../components/DocList";
+import { DeactivateModal } from "../../components/DeactivateModal";
 import { BRAND, BRAND_DK } from "../../lib/tokens";
 import { addMonths, monthNow } from "../../lib/format";
 import { getEmployee, updateEmployee, setChecklistItem, addDocument, deleteDocument } from "../../api/employees";
@@ -16,6 +17,7 @@ import PayTab from "./PayTab";
 export default function EmployeeDetail({ employeeId, settings: s, countryOf, companyById, onClose, onChanged }) {
   const [employee, setEmployee] = useState(null);
   const [tab, setTab] = useState("infos");
+  const [deactivateOpen, setDeactivateOpen] = useState(false);
 
   const refresh = () =>
     getEmployee(employeeId).then((e) => {
@@ -43,12 +45,17 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
   };
 
   const isOut = e.status === "Sorti";
-  const ruptureEval = isOut ? [...(e.evaluations || [])].reverse().find((ev) => ev.decision === "Rupture") : null;
-  const toggleActive = () => {
-    const next = isOut ? "Actif" : "Sorti";
-    const label = isOut ? "réactiver" : "désactiver";
-    if (!confirm(`Confirmer : ${label} ${e.firstName} ${e.lastName} ?`)) return;
-    patch({ status: next });
+  // Falls back to a "Rupture" evaluation's own notes for records created
+  // before exit reasons were tracked directly on the employee.
+  const ruptureEval = isOut && !e.exitReason ? [...(e.evaluations || [])].reverse().find((ev) => ev.decision === "Rupture") : null;
+  const reactivate = () => {
+    if (!confirm(`Confirmer : réactiver ${e.firstName} ${e.lastName} ?`)) return;
+    patch({ status: "Actif", exitDate: null, exitReason: null, exitNotes: null });
+  };
+  const confirmDeactivate = async (fields) => {
+    await updateEmployee(e.id, { status: "Sorti", ...fields });
+    setDeactivateOpen(false);
+    refresh();
   };
 
   const tabs = [
@@ -79,12 +86,22 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
           <div className="text-sm text-slate-500">
             Embauché le {e.hireDate ? new Date(e.hireDate).toLocaleDateString("fr-FR") : "—"}
           </div>
-          <Btn variant={isOut ? "outline" : "danger"} onClick={toggleActive}>
+          <Btn variant={isOut ? "outline" : "danger"} onClick={isOut ? reactivate : () => setDeactivateOpen(true)}>
             {isOut ? <UserCheck size={15} /> : <UserX size={15} />}
             {isOut ? "Réactiver" : "Désactiver"}
           </Btn>
         </div>
       </div>
+      {isOut && e.exitReason && (
+        <div className="mb-4 p-3 rounded-lg border border-rose-200 bg-rose-50">
+          <div className="flex items-center gap-2 text-sm font-medium text-rose-800">
+            <UserX size={14} />
+            {e.exitReason}
+            {e.exitDate && ` — ${new Date(e.exitDate).toLocaleDateString("fr-FR")}`}
+          </div>
+          {e.exitNotes && <p className="text-sm text-rose-700 mt-1 whitespace-pre-wrap">{e.exitNotes}</p>}
+        </div>
+      )}
       {ruptureEval && (
         <div className="mb-4 p-3 rounded-lg border border-rose-200 bg-rose-50">
           <div className="flex items-center gap-2 text-sm font-medium text-rose-800">
@@ -103,6 +120,14 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
             Voir le détail dans l'onglet Évaluations
           </button>
         </div>
+      )}
+      {deactivateOpen && (
+        <DeactivateModal
+          employee={e}
+          exitReasons={s.exitReasons}
+          onClose={() => setDeactivateOpen(false)}
+          onConfirm={confirmDeactivate}
+        />
       )}
       <div className="flex gap-1 border-b border-slate-200 mb-5 overflow-x-auto">
         {tabs.map((t) => (

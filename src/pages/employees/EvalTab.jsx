@@ -22,9 +22,10 @@ export default function EvalTab({ e, s, employeeId, onChanged }) {
       alert("Merci de préciser le motif de la rupture (essai non concluant) dans les observations.");
       return;
     }
+    const date = new Date().toISOString().slice(0, 10);
     await addEvaluation(employeeId, {
       templateId: tplId,
-      date: new Date().toISOString().slice(0, 10),
+      date,
       scores: { ...scores },
       total,
       decision: dec,
@@ -33,10 +34,17 @@ export default function EvalTab({ e, s, employeeId, onChanged }) {
     });
     // Confirmation or Rupture during probation resolve it one way or the other —
     // mirrors the same status transition already used for onboarding decisions.
+    // Rupture also fills the same exit fields the Désactiver action uses, so
+    // there's a single place (the header banner) that shows why someone left.
     if (dec === "Confirmation" && e.status === "Période d'essai") {
       await updateEmployee(employeeId, { status: "Actif" });
     } else if (dec === "Rupture" && e.status !== "Sorti") {
-      await updateEmployee(employeeId, { status: "Sorti" });
+      await updateEmployee(employeeId, {
+        status: "Sorti",
+        exitDate: date,
+        exitReason: "Rupture période d'essai",
+        exitNotes: notes,
+      });
     }
     setScores({});
     setNotes("");

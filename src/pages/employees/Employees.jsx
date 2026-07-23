@@ -9,6 +9,7 @@ import { listEmployees, updateEmployee } from "../../api/employees";
 import { listCompanies } from "../../api/companies";
 import { listCountries } from "../../api/countries";
 import { getSettings } from "../../api/settings";
+import { DeactivateModal } from "../../components/DeactivateModal";
 import EmployeeDetail from "./EmployeeDetail";
 import AddEmployee from "./AddEmployee";
 
@@ -21,6 +22,7 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
   const [search, setSearch] = useState("");
   const [detail, setDetail] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [deactivateTarget, setDeactivateTarget] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -43,11 +45,17 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
 
   const toggleActive = (ev, e) => {
     ev.stopPropagation();
-    const isOut = e.status === "Sorti";
-    const next = isOut ? "Actif" : "Sorti";
-    const label = isOut ? "réactiver" : "désactiver";
-    if (!confirm(`Confirmer : ${label} ${e.firstName} ${e.lastName} ?`)) return;
-    updateEmployee(e.id, { status: next }).then(load);
+    if (e.status === "Sorti") {
+      if (!confirm(`Confirmer : réactiver ${e.firstName} ${e.lastName} ?`)) return;
+      updateEmployee(e.id, { status: "Actif", exitDate: null, exitReason: null, exitNotes: null }).then(load);
+    } else {
+      setDeactivateTarget(e);
+    }
+  };
+  const confirmDeactivate = async (fields) => {
+    await updateEmployee(deactivateTarget.id, { status: "Sorti", ...fields });
+    setDeactivateTarget(null);
+    load();
   };
 
   const list = employees.filter((e) => {
@@ -182,6 +190,14 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
           onClose={() => setAddOpen(false)}
           onCreated={load}
           defaultCompany={companyFilter}
+        />
+      )}
+      {deactivateTarget && (
+        <DeactivateModal
+          employee={deactivateTarget}
+          exitReasons={settings.exitReasons}
+          onClose={() => setDeactivateTarget(null)}
+          onConfirm={confirmDeactivate}
         />
       )}
     </div>

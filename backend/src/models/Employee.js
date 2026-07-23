@@ -35,6 +35,11 @@ module.exports = (sequelize, DataTypes) => {
       leaveBalance: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0, field: "leave_balance" },
       // Customizable fields (Settings.customFields), keyed by custom field id.
       customJson: { type: DataTypes.JSON, allowNull: false, defaultValue: {}, field: "custom_json" },
+      // Set when status is switched to "Sorti" — captures why (démission,
+      // licenciement, fin d'essai, etc.), not just that it happened.
+      exitDate: { type: DataTypes.DATEONLY, allowNull: true, field: "exit_date" },
+      exitReason: { type: DataTypes.STRING(100), allowNull: true, field: "exit_reason" },
+      exitNotes: { type: DataTypes.TEXT, allowNull: true, field: "exit_notes" },
     },
     {
       tableName: "employees",
