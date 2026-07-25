@@ -48,6 +48,27 @@ async function loadProfileOr404(id) {
   return profile;
 }
 
+const MAX_FIXED_DAY_PER_ROOM = 1;
+const MAX_ROTATION_PER_ROOM = 2;
+
+/**
+ * Une salle Control Room = maximum 3 personnes : 1 agent jour fixe (contrôle)
+ * + 2 agents rotation (1 binôme). Vérifié à chaque attachement/déplacement
+ * d'agent, jamais uniquement côté UI.
+ */
+async function assertRoomCapacity(roomId, type, excludeProfileId) {
+  const where = { roomId, type };
+  if (excludeProfileId) where.id = { [Op.ne]: excludeProfileId };
+  const count = await db.PlanningProfile.count({ where });
+
+  if (type === "fixed_day" && count >= MAX_FIXED_DAY_PER_ROOM) {
+    throw new ApiError(409, "Cette salle a déjà son agent jour fixe (contrôle) — une seule place par salle.");
+  }
+  if (type === "rotation" && count >= MAX_ROTATION_PER_ROOM) {
+    throw new ApiError(409, "Cette salle a déjà ses 2 agents rotation (1 binôme) — maximum 3 personnes par salle.");
+  }
+}
+
 const list = asyncHandler(async (req, res) => {
   const where = {};
   if (req.query.room_id) where.roomId = req.query.room_id;
@@ -73,6 +94,8 @@ const create = asyncHandler(async (req, res) => {
 
   const already = await db.PlanningProfile.findOne({ where: { employeeId } });
   if (already) throw new ApiError(409, "Ce salarié est déjà un agent du planning.");
+
+  await assertRoomCapacity(roomId, type);
 
   validateDaySpec(req.body.day_spec);
   validateAltParity(req.body.alt_parity);
@@ -105,6 +128,7 @@ const create = asyncHandler(async (req, res) => {
 const update = asyncHandler(async (req, res) => {
   const profile = await loadProfileOr404(req.params.id);
   const oldRoomId = profile.roomId;
+  const oldType = profile.type;
 
   if (req.body?.room_id !== undefined) {
     const room = await db.PlanningRoom.findByPk(req.body.room_id);
@@ -115,6 +139,11 @@ const update = asyncHandler(async (req, res) => {
     if (!["rotation", "fixed_day"].includes(req.body.type)) throw new ApiError(400, "type doit être rotation ou fixed_day.");
     profile.type = req.body.type;
   }
+
+  if (profile.roomId !== oldRoomId || profile.type !== oldType) {
+    await assertRoomCapacity(profile.roomId, profile.type, profile.id);
+  }
+
   validateDaySpec(req.body?.day_spec);
   validateAltParity(req.body?.alt_parity);
 

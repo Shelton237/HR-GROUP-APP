@@ -85,7 +85,12 @@ function autoStatusesForRotation(rotating, control, iso, monIso, awayEmployeeIds
   const byBinome = [...byBinomeMap.keys()]
     .sort((a, b) => a - b)
     .map((k) => byBinomeMap.get(k));
-  if (byBinome.length !== 3) return statuses;
+  // The downgrade below is evaluated per-binôme (each pair's own natural phase
+  // vs. the control agent), independently of how many other binômes exist —
+  // it holds for the standard 3-binômes room (legacy shape) and equally for
+  // the current standard shape of 1 binôme + 1 contrôle (max 3 people/salle).
+  // Other counts are left to the raw per-employee cycle (no coverage guarantee).
+  if (byBinome.length !== 1 && byBinome.length !== 3) return statuses;
 
   const controlWorks = !!control && workingDaysFor(control, monIso).includes(dowISO(iso));
   if (!controlWorks) return statuses;

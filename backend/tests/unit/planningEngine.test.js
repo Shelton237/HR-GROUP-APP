@@ -90,7 +90,7 @@ describe("planningEngine — autoStatusesForRotation (binôme/contrôle coverage
     expect(withAway[presentMember.id]).toBe("J");
   });
 
-  it("falls back to independent per-employee cycles when there are not exactly 3 binômes", () => {
+  it("falls back to independent per-employee cycles for an unsupported binôme count (e.g. 2 binômes)", () => {
     const onlyTwoBinomes = rotating.slice(0, 4);
     const monIso = engine.mondayISOof("2026-01-05");
     const iso = engine.weekDates(monIso)[0];
@@ -98,6 +98,35 @@ describe("planningEngine — autoStatusesForRotation (binôme/contrôle coverage
     for (const e of onlyTwoBinomes) {
       expect(statuses[e.id]).toBe(engine.autoStatus(e, iso, monIso));
     }
+  });
+});
+
+describe("planningEngine — autoStatusesForRotation with a single binôme (max-3-per-room shape: 1 contrôle + 1 binôme)", () => {
+  const rotating = [makeRotation("a1", 0, 1), makeRotation("a2", 0, 1)];
+  const control = makeControl("ctrl");
+
+  it("never exceeds 2 simultaneous J or N (binôme + contrôle combined), across several weeks", () => {
+    const mondays = ["2026-01-05", "2026-01-12", "2026-01-19", "2026-01-26"];
+    for (const monIso of mondays) {
+      const dates = engine.weekDates(monIso);
+      for (const iso of dates) {
+        const statuses = engine.autoStatusesForRotation(rotating, control, iso, monIso, []);
+        const controlStatus = engine.autoStatus(control, iso, monIso);
+        const jCount = Object.values(statuses).filter((s) => s === "J").length + (controlStatus === "J" ? 1 : 0);
+        const nCount = Object.values(statuses).filter((s) => s === "N").length + (controlStatus === "N" ? 1 : 0);
+        expect(jCount).toBeLessThanOrEqual(2);
+        expect(nCount).toBeLessThanOrEqual(2);
+      }
+    }
+  });
+
+  it("splits the binôme (one member downgraded to R) only when both would collide with a working contrôle", () => {
+    const monIso = engine.mondayISOof("2026-01-05");
+    const iso = "2026-01-07"; // both members naturally J that day, per the fixture used elsewhere in this file
+    const statuses = engine.autoStatusesForRotation(rotating, control, iso, monIso, []);
+    const values = Object.values(statuses);
+    expect(values.filter((s) => s === "J")).toHaveLength(1);
+    expect(values.filter((s) => s === "R")).toHaveLength(1);
   });
 });
 
