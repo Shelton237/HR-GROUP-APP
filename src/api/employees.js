@@ -61,9 +61,14 @@ export function updateEmployee(id, body) {
   return api.put(`/employees/${id}`, payload).then(normalizeEmployee);
 }
 
-/** DELETE /employees/:id */
-export function deleteEmployee(id) {
-  return api.del(`/employees/${id}`);
+/**
+ * "Supprimer" in the UI is a permanent archive, not a hard delete — payroll,
+ * evaluation, and leave history must survive for an ex-employee. There is no
+ * un-archive action once this is set.
+ * PUT /employees/:id  body: { archived: true, archivedAt }
+ */
+export function archiveEmployee(id) {
+  return api.put(`/employees/${id}`, { archived: true, archivedAt: new Date().toISOString() }).then(normalizeEmployee);
 }
 
 /* ---- Checklist (dossier d'embauche) ---- */

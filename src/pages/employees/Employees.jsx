@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import { Search, Plus, Check, AlertTriangle, UserX, UserCheck } from "lucide-react";
+import { Search, Plus, Check, AlertTriangle, UserX, UserCheck, Trash2 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Btn } from "../../components/ui/Btn";
 import { Badge } from "../../components/ui/Badge";
 import { inputCls } from "../../lib/tokens";
 import { fmt } from "../../lib/format";
-import { listEmployees, updateEmployee } from "../../api/employees";
+import { listEmployees, updateEmployee, archiveEmployee } from "../../api/employees";
 import { listCompanies } from "../../api/companies";
 import { listCountries } from "../../api/countries";
 import { getSettings } from "../../api/settings";
 import { DeactivateModal } from "../../components/DeactivateModal";
+import { ArchiveEmployeeModal } from "../../components/ArchiveEmployeeModal";
 import EmployeeDetail from "./EmployeeDetail";
 import AddEmployee from "./AddEmployee";
 
@@ -23,10 +24,12 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
   const [detail, setDetail] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
   const [deactivateTarget, setDeactivateTarget] = useState(null);
+  const [archiveTarget, setArchiveTarget] = useState(null);
+  const [showArchived, setShowArchived] = useState(false);
 
-  const load = () => {
+  const load = (includeArchived = showArchived) => {
     setLoading(true);
-    return Promise.all([listEmployees(), listCompanies(), listCountries(), getSettings()])
+    return Promise.all([listEmployees({ includeArchived }), listCompanies(), listCountries(), getSettings()])
       .then(([e, c, ct, s]) => {
         setEmployees(e || []);
         setCompanies(c || []);
@@ -37,8 +40,9 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    load(showArchived);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showArchived]);
 
   const companyById = (id) => companies.find((c) => c.id === id);
   const countryOf = (code) => countries.find((c) => c.code === code);
@@ -55,6 +59,11 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
   const confirmDeactivate = async (fields) => {
     await updateEmployee(deactivateTarget.id, { status: "Sorti", ...fields });
     setDeactivateTarget(null);
+    load();
+  };
+  const confirmArchive = async () => {
+    await archiveEmployee(archiveTarget.id);
+    setArchiveTarget(null);
     load();
   };
 
@@ -86,6 +95,10 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
             </option>
           ))}
         </select>
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          <input type="checkbox" className="accent-[#E31E3D]" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
+          Afficher les salariés supprimés
+        </label>
         <div className="ml-auto">
           <Btn onClick={() => setAddOpen(true)}>
             <Plus size={16} />
@@ -112,7 +125,11 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
               const ct = countryOf(comp?.countryCode);
               const missing = (ct?.checklist || []).filter((c) => !e.checklist?.[c.key]).length;
               return (
-                <tr key={e.id} onClick={() => setDetail(e.id)} className="border-b border-slate-100 hover:bg-[#E31E3D]/5 cursor-pointer">
+                <tr
+                  key={e.id}
+                  onClick={() => setDetail(e.id)}
+                  className={"border-b border-slate-100 cursor-pointer " + (e.archived ? "opacity-60 hover:bg-slate-50" : "hover:bg-[#E31E3D]/5")}
+                >
                   <td className="px-4 py-3">
                     <div className="font-medium text-slate-900">
                       {e.firstName} {e.lastName}
@@ -140,7 +157,9 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {e.status === "Période d'essai" ? (
+                    {e.archived ? (
+                      <Badge>Supprimé</Badge>
+                    ) : e.status === "Période d'essai" ? (
                       <Badge tone="amber">Essai</Badge>
                     ) : e.status === "Sorti" ? (
                       <Badge tone="rose">Sorti</Badge>
@@ -149,16 +168,30 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={(ev) => toggleActive(ev, e)}
-                      title={e.status === "Sorti" ? "Réactiver" : "Désactiver"}
-                      className={
-                        "p-1.5 rounded-md " +
-                        (e.status === "Sorti" ? "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50" : "text-slate-400 hover:text-rose-600 hover:bg-rose-50")
-                      }
-                    >
-                      {e.status === "Sorti" ? <UserCheck size={15} /> : <UserX size={15} />}
-                    </button>
+                    {!e.archived && (
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={(ev) => toggleActive(ev, e)}
+                          title={e.status === "Sorti" ? "Réactiver" : "Désactiver"}
+                          className={
+                            "p-1.5 rounded-md " +
+                            (e.status === "Sorti" ? "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50" : "text-slate-400 hover:text-rose-600 hover:bg-rose-50")
+                          }
+                        >
+                          {e.status === "Sorti" ? <UserCheck size={15} /> : <UserX size={15} />}
+                        </button>
+                        <button
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            setArchiveTarget(e);
+                          }}
+                          title="Supprimer (archivage définitif)"
+                          className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               );
@@ -199,6 +232,9 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
           onClose={() => setDeactivateTarget(null)}
           onConfirm={confirmDeactivate}
         />
+      )}
+      {archiveTarget && (
+        <ArchiveEmployeeModal employee={archiveTarget} onClose={() => setArchiveTarget(null)} onConfirm={confirmArchive} />
       )}
     </div>
   );

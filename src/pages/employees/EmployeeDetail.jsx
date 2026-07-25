@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { Clock, Check, UserX, UserCheck } from "lucide-react";
+import { Clock, Check, UserX, UserCheck, Trash2 } from "lucide-react";
 import { Modal } from "../../components/ui/Modal";
 import { Badge } from "../../components/ui/Badge";
 import { Btn } from "../../components/ui/Btn";
 import { DocList } from "../../components/DocList";
 import { DeactivateModal } from "../../components/DeactivateModal";
+import { ArchiveEmployeeModal } from "../../components/ArchiveEmployeeModal";
 import { BRAND, BRAND_DK } from "../../lib/tokens";
 import { addMonths, monthNow } from "../../lib/format";
-import { getEmployee, updateEmployee, setChecklistItem, addDocument, deleteDocument } from "../../api/employees";
+import { getEmployee, updateEmployee, archiveEmployee, setChecklistItem, addDocument, deleteDocument } from "../../api/employees";
 import InfosTab from "./InfosTab";
 import OnboardTab from "./OnboardTab";
 import EvalTab from "./EvalTab";
@@ -18,6 +19,7 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
   const [employee, setEmployee] = useState(null);
   const [tab, setTab] = useState("infos");
   const [deactivateOpen, setDeactivateOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   const refresh = () =>
     getEmployee(employeeId).then((e) => {
@@ -57,6 +59,12 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
     setDeactivateOpen(false);
     refresh();
   };
+  const confirmArchive = async () => {
+    await archiveEmployee(e.id);
+    setArchiveOpen(false);
+    onChanged();
+    onClose();
+  };
 
   const tabs = [
     { id: "infos", label: "Informations" },
@@ -82,16 +90,34 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
           </Badge>
         )}
         {isOut && <Badge tone="rose">Sorti</Badge>}
+        {e.archived && <Badge>Supprimé</Badge>}
         <div className="ml-auto flex items-center gap-3">
           <div className="text-sm text-slate-500">
             Embauché le {e.hireDate ? new Date(e.hireDate).toLocaleDateString("fr-FR") : "—"}
           </div>
-          <Btn variant={isOut ? "outline" : "danger"} onClick={isOut ? reactivate : () => setDeactivateOpen(true)}>
-            {isOut ? <UserCheck size={15} /> : <UserX size={15} />}
-            {isOut ? "Réactiver" : "Désactiver"}
-          </Btn>
+          {!e.archived && (
+            <>
+              <Btn variant={isOut ? "outline" : "danger"} onClick={isOut ? reactivate : () => setDeactivateOpen(true)}>
+                {isOut ? <UserCheck size={15} /> : <UserX size={15} />}
+                {isOut ? "Réactiver" : "Désactiver"}
+              </Btn>
+              <button
+                onClick={() => setArchiveOpen(true)}
+                title="Supprimer (archivage définitif)"
+                className="w-9 h-9 rounded-lg grid place-items-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+              >
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
         </div>
       </div>
+      {e.archived && (
+        <div className="mb-4 p-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-600">
+          Ce salarié a été supprimé{e.archivedAt && ` le ${new Date(e.archivedAt).toLocaleDateString("fr-FR")}`}. Ce dossier est
+          conservé à titre d'historique mais ne peut plus être réactivé.
+        </div>
+      )}
       {isOut && e.exitReason && (
         <div className="mb-4 p-3 rounded-lg border border-rose-200 bg-rose-50">
           <div className="flex items-center gap-2 text-sm font-medium text-rose-800">
@@ -129,6 +155,7 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
           onConfirm={confirmDeactivate}
         />
       )}
+      {archiveOpen && <ArchiveEmployeeModal employee={e} onClose={() => setArchiveOpen(false)} onConfirm={confirmArchive} />}
       <div className="flex gap-1 border-b border-slate-200 mb-5 overflow-x-auto">
         {tabs.map((t) => (
           <button

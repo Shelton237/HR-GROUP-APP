@@ -40,6 +40,11 @@ module.exports = (sequelize, DataTypes) => {
       exitDate: { type: DataTypes.DATEONLY, allowNull: true, field: "exit_date" },
       exitReason: { type: DataTypes.STRING(100), allowNull: true, field: "exit_reason" },
       exitNotes: { type: DataTypes.TEXT, allowNull: true, field: "exit_notes" },
+      // "Suppression" in the UI is a permanent archive, not a hard delete —
+      // history (payroll, evaluations, leaves...) must survive for an
+      // ex-employee. Once true, there is no un-archive action.
+      archived: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+      archivedAt: { type: DataTypes.DATE, allowNull: true, field: "archived_at" },
     },
     {
       tableName: "employees",

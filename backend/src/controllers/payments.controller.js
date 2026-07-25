@@ -17,7 +17,7 @@ const summary = asyncHandler(async (req, res) => {
   const country = await db.Country.findByPk(company.countryCode);
   const settings = await db.Settings.findByPk(1);
 
-  const employees = await db.Employee.findAll({ where: { companyId, status: { [db.Sequelize.Op.ne]: "Sorti" } } });
+  const employees = await db.Employee.findAll({ where: { companyId, status: { [db.Sequelize.Op.ne]: "Sorti" }, archived: false } });
 
   const countryShape = country
     ? {

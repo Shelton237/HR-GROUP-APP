@@ -21,7 +21,7 @@ async function loadScopedCompaniesAndCountries(req) {
 async function buildAlertsData(companies, countries) {
   const companyIds = companies.map((c) => c.id);
   const employees = await db.Employee.findAll({
-    where: { companyId: { [Op.in]: companyIds.length ? companyIds : ["__none__"] }, status: { [Op.ne]: "Sorti" } },
+    where: { companyId: { [Op.in]: companyIds.length ? companyIds : ["__none__"] }, status: { [Op.ne]: "Sorti" }, archived: false },
     include: [
       { model: db.EmployeeEvaluation, as: "evaluations" },
       { model: db.EmployeeChecklistItem, as: "checklist" },
@@ -75,7 +75,7 @@ const summary = asyncHandler(async (req, res) => {
   for (const comp of companies) {
     const country = countryByCode[comp.countryCode];
     const employees = await db.Employee.findAll({
-      where: { companyId: comp.id, status: { [Op.ne]: "Sorti" } },
+      where: { companyId: comp.id, status: { [Op.ne]: "Sorti" }, archived: false },
     });
     let brut = 0,
       net = 0,

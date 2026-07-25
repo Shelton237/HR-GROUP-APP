@@ -32,6 +32,9 @@ const list = asyncHandler(async (req, res) => {
     const q = `%${req.query.search}%`;
     where[Op.or] = [{ firstName: { [Op.like]: q } }, { lastName: { [Op.like]: q } }, { poste: { [Op.like]: q } }];
   }
+  // Archived employees ("Supprimer" in the UI) are hidden from the default
+  // list — they're a permanent record, not part of day-to-day management.
+  if (req.query.includeArchived !== "true") where.archived = false;
   const employees = await db.Employee.findAll({
     where,
     order: [["lastName", "ASC"]],
@@ -92,6 +95,8 @@ const ALLOWED_EMPLOYEE_FIELDS = [
   "exitDate",
   "exitReason",
   "exitNotes",
+  "archived",
+  "archivedAt",
 ];
 
 const create = asyncHandler(async (req, res) => {
