@@ -10,6 +10,7 @@ import Payroll from "./pages/Payroll";
 import Leaves from "./pages/Leaves";
 import Fiscalite from "./pages/Fiscalite";
 import SettingsView from "./pages/Settings";
+import Planning from "./pages/planning/Planning";
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -53,6 +54,7 @@ export default function App() {
           {view === "employees" && <Employees companyFilter={companyFilter} setCompanyFilter={setCompanyFilter} />}
           {view === "payroll" && <Payroll />}
           {view === "leaves" && <Leaves />}
+          {view === "planning" && <Planning />}
           {view === "fiscalite" && <Fiscalite />}
           {view === "settings" && <SettingsView />}
         </div>
