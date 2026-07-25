@@ -6,7 +6,14 @@ const JWT_EXPIRES_IN = "8h";
 
 function signToken(user) {
   return jwt.sign(
-    { sub: user.id, role: user.role, scope: user.scope, name: user.name, email: user.email },
+    {
+      sub: user.id,
+      role: user.role,
+      scope: user.scope,
+      name: user.name,
+      email: user.email,
+      employeeId: user.employeeId || undefined,
+    },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
@@ -27,11 +34,25 @@ function authenticate(req, res, next) {
       scope: payload.scope,
       name: payload.name,
       email: payload.email,
+      employeeId: payload.employeeId || null,
     };
     next();
   } catch (err) {
     next(new ApiError(401, "Jeton invalide ou expiré."));
   }
+}
+
+/**
+ * Restreint une route au rôle "Agent" scopé sur son propre employé — l'identité
+ * vient toujours du JWT vérifié (req.user.employeeId), jamais d'un paramètre
+ * d'URL, pour qu'un agent ne puisse jamais consulter le planning d'un autre.
+ */
+function requireSelfEmployee(req, res, next) {
+  if (!req.user) return next(new ApiError(401, "Authentification requise."));
+  if (req.user.role !== "Agent" || !req.user.employeeId) {
+    return next(new ApiError(403, "Réservé aux comptes agent liés à un salarié."));
+  }
+  next();
 }
 
 /** Restricts a route to a fixed set of roles. Admin is implicitly always allowed. */
@@ -89,6 +110,7 @@ module.exports = {
   signToken,
   authenticate,
   requireRole,
+  requireSelfEmployee,
   blockReadOnly,
   hasCompanyScope,
   scopedCompanyIds,

@@ -13,19 +13,26 @@ module.exports = (sequelize, DataTypes) => {
         field: "must_change_password",
       },
       role: {
-        type: DataTypes.ENUM("Admin", "RH", "Manager", "Lecture"),
+        type: DataTypes.ENUM("Admin", "RH", "Manager", "Lecture", "Agent"),
         allowNull: false,
         defaultValue: "Lecture",
       },
       // "all" (string) or an array of company ids, matching the front-end shape exactly.
       scope: { type: DataTypes.JSON, allowNull: false, defaultValue: [] },
       active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+      // Set for role "Agent" — links the login to the RH employee it acts as
+      // (self-service Planning access). Never trust a URL param for this scoping.
+      employeeId: { type: DataTypes.STRING(40), allowNull: true, field: "employee_id" },
     },
     {
       tableName: "users",
       timestamps: true,
     }
   );
+
+  User.associate = (models) => {
+    User.belongsTo(models.Employee, { foreignKey: "employeeId" });
+  };
 
   return User;
 };

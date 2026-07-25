@@ -52,7 +52,7 @@ export default function MonthTab({ rooms, currentRoomId, setCurrentRoomId, month
       <div className="flex gap-3 items-end flex-wrap mb-3">
         <div>
           <label className="block text-xs font-semibold text-slate-500 mb-1">Salle</label>
-          <select className={inputCls} value={currentRoomId ?? ""} onChange={(e) => setCurrentRoomId(Number(e.target.value))}>
+          <select className={inputCls} value={currentRoomId ?? ""} onChange={(e) => setCurrentRoomId(e.target.value)}>
             {rooms.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}

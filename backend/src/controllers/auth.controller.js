@@ -23,6 +23,7 @@ const login = asyncHandler(async (req, res) => {
       role: user.role,
       scope: user.scope,
       mustChangePassword: user.mustChangePassword,
+      employeeId: user.employeeId,
     },
   });
 });
@@ -38,6 +39,7 @@ const me = asyncHandler(async (req, res) => {
     scope: user.scope,
     active: user.active,
     mustChangePassword: user.mustChangePassword,
+    employeeId: user.employeeId,
   });
 });
 

@@ -3,7 +3,7 @@ import { Card } from "../../components/ui/Card";
 import { Btn } from "../../components/ui/Btn";
 import { inputCls } from "../../lib/tokens";
 import { addDaysISO, fmtShort, isoWeekNum, mondayISOof, todayISO, weekParity } from "../../lib/planningDates";
-import { getRoomSchedule, listPlanningEmployees, patchScheduleCell, resetWeek, addLoan, removeLoan } from "../../api/planning";
+import { getRoomSchedule, listPlanningAgents, patchScheduleCell, resetWeek, addLoan, removeLoan } from "../../api/planning";
 import { PlanningGrid, Legend } from "./PlanningGrid";
 import { ApiError } from "../../api/client";
 
@@ -42,7 +42,7 @@ export default function WeekTab({ rooms, currentRoomId, setCurrentRoomId, weekSt
     setLoading(true);
     setError("");
     try {
-      const [sched, emps] = await Promise.all([getRoomSchedule(currentRoomId, weekStart), listPlanningEmployees()]);
+      const [sched, emps] = await Promise.all([getRoomSchedule(currentRoomId, weekStart), listPlanningAgents()]);
       setSchedule(sched);
       setAllEmployees(emps);
     } catch (e) {
@@ -80,7 +80,7 @@ export default function WeekTab({ rooms, currentRoomId, setCurrentRoomId, weekSt
   const handleAssignCross = async () => {
     if (!currentRoomId || !crossEmployeeId) return;
     try {
-      await addLoan(currentRoomId, weekStart, Number(crossEmployeeId));
+      await addLoan(currentRoomId, weekStart, crossEmployeeId);
       setCrossEmployeeId("");
       await reload();
     } catch (e) {
@@ -127,7 +127,7 @@ export default function WeekTab({ rooms, currentRoomId, setCurrentRoomId, weekSt
       <div className="flex gap-3 items-end flex-wrap mb-3">
         <div>
           <label className="block text-xs font-semibold text-slate-500 mb-1">Salle</label>
-          <select className={inputCls} value={currentRoomId ?? ""} onChange={(e) => setCurrentRoomId(Number(e.target.value))}>
+          <select className={inputCls} value={currentRoomId ?? ""} onChange={(e) => setCurrentRoomId(e.target.value)}>
             {rooms.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}

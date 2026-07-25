@@ -11,9 +11,10 @@ import Leaves from "./pages/Leaves";
 import Fiscalite from "./pages/Fiscalite";
 import SettingsView from "./pages/Settings";
 import Planning from "./pages/planning/Planning";
+import AgentApp from "./pages/agent/AgentApp";
 
 export default function App() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [view, setView] = useState("dashboard");
   const [companyFilter, setCompanyFilter] = useState(null);
 
@@ -22,6 +23,9 @@ export default function App() {
   }
   if (!isAuthenticated) {
     return <Login />;
+  }
+  if (user?.role === "Agent") {
+    return <AgentApp />;
   }
 
   const navigate = (id) => {

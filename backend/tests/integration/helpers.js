@@ -5,6 +5,11 @@ const app = require("../../src/app");
 
 // Children-first order so FK constraints don't block truncation.
 const TABLES_CHILDREN_FIRST = [
+  "planning_absences",
+  "planning_room_week_loans",
+  "planning_schedule_overrides",
+  "planning_profiles",
+  "planning_rooms",
   "employee_pay_vars",
   "employee_overtime",
   "employee_onboarding",

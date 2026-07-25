@@ -12,6 +12,9 @@ async function start() {
     await sequelize.authenticate();
     // eslint-disable-next-line no-console
     console.log("Database connection established.");
+    if (process.env.NODE_ENV !== "test") {
+      require("./jobs/weeklyDiffusion.job").start();
+    }
     app.listen(PORT, () => {
       // eslint-disable-next-line no-console
       console.log(`hr-group-api listening on port ${PORT}`);

@@ -19,6 +19,11 @@ const modelDefiners = [
   require("./Payment"),
   require("./Settings"),
   require("./Notifications"),
+  require("./PlanningRoom"),
+  require("./PlanningProfile"),
+  require("./PlanningScheduleOverride"),
+  require("./PlanningRoomWeekLoan"),
+  require("./PlanningAbsence"),
 ];
 
 const db = { sequelize, Sequelize: require("sequelize") };

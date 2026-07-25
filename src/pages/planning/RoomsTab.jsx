@@ -3,7 +3,7 @@ import { Card } from "../../components/ui/Card";
 import { Btn } from "../../components/ui/Btn";
 import { Badge } from "../../components/ui/Badge";
 import { inputCls } from "../../lib/tokens";
-import { createRoom, deleteRoom, listPlanningEmployees, updateRoom } from "../../api/planning";
+import { createRoom, deleteRoom, listPlanningAgents, updateRoom } from "../../api/planning";
 import { ApiError } from "../../api/client";
 
 export default function RoomsTab({ rooms, loading, error: loadError, reload }) {
@@ -13,7 +13,7 @@ export default function RoomsTab({ rooms, loading, error: loadError, reload }) {
   const [hasFixed, setHasFixed] = useState({});
 
   useEffect(() => {
-    listPlanningEmployees()
+    listPlanningAgents()
       .then((employees) => {
         const nextCounts = {};
         const nextHasFixed = {};

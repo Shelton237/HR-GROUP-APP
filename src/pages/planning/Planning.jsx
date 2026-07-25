@@ -7,6 +7,8 @@ import WeekTab from "./WeekTab";
 import MonthTab from "./MonthTab";
 import DiffusionTab from "./DiffusionTab";
 import RoomsTab from "./RoomsTab";
+import AgentsTab from "./AgentsTab";
+import AbsencesTab from "./AbsencesTab";
 
 // Salle/semaine/mois partagés entre les onglets (évite de re-choisir la
 // salle à chaque changement d'onglet) — équivalent de PlanningContext côté
@@ -46,6 +48,8 @@ export default function Planning() {
     ["mois", "Mois"],
     ["diffusion", "Diffusion"],
     ["salles", "Salles"],
+    ["agents", "Agents"],
+    ["absences", "Absences"],
   ];
 
   if (roomsLoading) return <div className="text-sm text-slate-400 py-10 text-center">Chargement…</div>;
@@ -78,6 +82,8 @@ export default function Planning() {
         <DiffusionTab rooms={rooms} currentRoomId={currentRoomId} setCurrentRoomId={setCurrentRoomId} weekStart={weekStart} setWeekStart={setWeekStart} />
       )}
       {tab === "salles" && <RoomsTab rooms={rooms} loading={roomsLoading} error={roomsError} reload={reloadRooms} />}
+      {tab === "agents" && <AgentsTab rooms={rooms} />}
+      {tab === "absences" && <AbsencesTab />}
     </div>
   );
 }
