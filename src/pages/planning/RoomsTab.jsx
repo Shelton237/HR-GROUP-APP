@@ -64,9 +64,9 @@ export default function RoomsTab({ rooms, loading, error: loadError, reload }) {
     <Card className="p-4">
       <h2 className="text-lg font-semibold mb-1 text-slate-900">Salles de contrôle</h2>
       <p className="text-sm text-slate-500 mb-3">
-        Format verrouillé : <b>service de quart 24/7</b>, maximum <b>3 personnes par salle</b> — 1 agent jour fixe (contrôle) +
-        2 agents rotation (1 binôme) en Jour · Nuit · Repos. Jamais plus de 2 agents simultanément en Jour, ni plus de 2 en
-        Nuit. Chaque salle doit avoir un agent fixe.
+        Format verrouillé : <b>service de quart 24/7</b>, maximum <b>7 personnes par salle</b> — 1 agent jour fixe (contrôle) +
+        6 agents rotation (3 binômes) en Jour · Nuit · Repos. C'est le seul format qui garantit chaque jour exactement 2
+        personnes en Jour et 2 en Nuit, sans exception. Chaque salle doit avoir un agent fixe.
       </p>
 
       {(error || loadError) && (

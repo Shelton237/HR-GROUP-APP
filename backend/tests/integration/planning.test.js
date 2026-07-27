@@ -62,39 +62,47 @@ describe("Planning (Control Room, native)", () => {
     expect([b2.offset, b2.binome]).toEqual([0, 1]);
   });
 
-  it("a full room (1 binôme + 1 contrôle, the max-3 shape) never exceeds 2 simultaneous J/N, all week", async () => {
+  it("a full room (3 binômes + 1 contrôle, the guaranteed-coverage shape) always has exactly 2 J and 2 N, every day", async () => {
     await resetPlanningTables();
     const room = await createRoom("Salle B");
-    await attachAgent(employees[0].id, room.id, "rotation");
-    await attachAgent(employees[1].id, room.id, "rotation");
-    await attachAgent(employees[2].id, room.id, "fixed_day");
+    for (let i = 0; i < 6; i++) {
+      await attachAgent(employees[i].id, room.id, "rotation");
+    }
+    await attachAgent(employees[6].id, room.id, "fixed_day");
 
     const res = await request(app)
       .get(`/api/planning/rooms/${room.id}/schedule?week=2026-02-02`)
       .set("Authorization", `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
-    expect(res.body.coverage.J.every((n) => n <= 2)).toBe(true);
-    expect(res.body.coverage.N.every((n) => n <= 2)).toBe(true);
-    expect(res.body.roster).toHaveLength(3);
+    expect(res.body.coverage.J).toEqual([2, 2, 2, 2, 2, 2, 2]);
+    expect(res.body.coverage.N).toEqual([2, 2, 2, 2, 2, 2, 2]);
+    expect(res.body.roster).toHaveLength(7);
   });
 
-  it("rejects attaching a 3rd rotation agent or a 2nd contrôle to the same room (max 3 people/salle)", async () => {
+  it("rejects attaching a 7th rotation agent or a 2nd contrôle to the same room (max 7 people/salle)", async () => {
     await resetPlanningTables();
     const room = await createRoom("Salle Capacité");
-    await attachAgent(employees[0].id, room.id, "rotation");
-    await attachAgent(employees[1].id, room.id, "rotation");
-    await attachAgent(employees[2].id, room.id, "fixed_day");
+    for (let i = 0; i < 6; i++) {
+      await attachAgent(employees[i].id, room.id, "rotation");
+    }
+    await attachAgent(employees[6].id, room.id, "fixed_day");
 
-    const thirdRotation = await request(app)
+    const extraEmployee = await request(app)
+      .post("/api/employees")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ companyId: employees[0].companyId, firstName: "Extra", lastName: "Agent" });
+    expect(extraEmployee.status).toBe(201);
+
+    const seventhRotation = await request(app)
       .post("/api/planning/agents")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ employee_id: employees[3].id, room_id: room.id, type: "rotation" });
-    expect(thirdRotation.status).toBe(409);
+      .send({ employee_id: extraEmployee.body.id, room_id: room.id, type: "rotation" });
+    expect(seventhRotation.status).toBe(409);
 
     const secondControl = await request(app)
       .post("/api/planning/agents")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ employee_id: employees[4].id, room_id: room.id, type: "fixed_day" });
+      .send({ employee_id: extraEmployee.body.id, room_id: room.id, type: "fixed_day" });
     expect(secondControl.status).toBe(409);
   });
 

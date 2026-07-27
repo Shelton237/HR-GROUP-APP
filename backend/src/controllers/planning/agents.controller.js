@@ -49,11 +49,17 @@ async function loadProfileOr404(id) {
 }
 
 const MAX_FIXED_DAY_PER_ROOM = 1;
-const MAX_ROTATION_PER_ROOM = 2;
+const MAX_ROTATION_PER_ROOM = 6;
 
 /**
- * Une salle Control Room = maximum 3 personnes : 1 agent jour fixe (contrôle)
- * + 2 agents rotation (1 binôme). Vérifié à chaque attachement/déplacement
+ * Une salle Control Room = maximum 7 personnes : 1 agent jour fixe (contrôle)
+ * + 6 agents rotation (3 binômes). C'est le seul format qui garantit, TOUS
+ * les jours sans exception, exactement 2 personnes en Jour et 2 en Nuit :
+ * avec 3 binômes (offsets 0/1/2), un binôme entier est toujours naturellement
+ * en J, un en N, un en R — le contrôle rejoint le binôme-J (rétrogradant l'un
+ * de ses 2 membres en R ce jour-là pour rester à 2 en J). Moins de 3 binômes
+ * ne peut pas garantir 2+2 tous les jours (vérifié : ça retombe parfois à 0
+ * en nuit ou 1 seul en jour). Vérifié à chaque attachement/déplacement
  * d'agent, jamais uniquement côté UI.
  */
 async function assertRoomCapacity(roomId, type, excludeProfileId) {
@@ -65,7 +71,7 @@ async function assertRoomCapacity(roomId, type, excludeProfileId) {
     throw new ApiError(409, "Cette salle a déjà son agent jour fixe (contrôle) — une seule place par salle.");
   }
   if (type === "rotation" && count >= MAX_ROTATION_PER_ROOM) {
-    throw new ApiError(409, "Cette salle a déjà ses 2 agents rotation (1 binôme) — maximum 3 personnes par salle.");
+    throw new ApiError(409, "Cette salle a déjà ses 6 agents rotation (3 binômes) — maximum 7 personnes par salle.");
   }
 }
 
