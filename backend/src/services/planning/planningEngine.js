@@ -31,9 +31,12 @@ function weekDates(monIso) {
   return weekDatesOf(monIso);
 }
 
+// Lundi-Vendredi (week-end off) — un contrôle qui ne travaille que 5 jours
+// laisse plus de créneaux J/N disponibles au binôme rotation de sa salle
+// (au maximum 3 personnes : 1 contrôle + 1 binôme) que l'ancien Lundi-Samedi.
 function defaultSpec() {
   const s = Array(7).fill("off");
-  for (let i = 0; i < 6; i++) s[i] = "on";
+  for (let i = 0; i < 5; i++) s[i] = "on";
   return s;
 }
 

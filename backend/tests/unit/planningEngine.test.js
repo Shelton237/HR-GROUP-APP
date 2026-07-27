@@ -65,8 +65,8 @@ describe("planningEngine — autoStatusesForRotation (binôme/contrôle coverage
 
   it("never exceeds 2 simultaneous J when the control agent works, across a full week", () => {
     const monIso = engine.mondayISOof("2026-01-05");
-    for (let d = 0; d < 6; d++) {
-      // control's day_spec defaults to Mon-Sat 'on' -> works days 0..5
+    for (let d = 0; d < 7; d++) {
+      // control's day_spec defaults to Lun-Ven 'on' (week-end off)
       const iso = engine.weekDates(monIso)[d];
       const statuses = engine.autoStatusesForRotation(rotating, control, iso, monIso, []);
       const jCount = Object.values(statuses).filter((s) => s === "J").length;
