@@ -9,6 +9,9 @@ module.exports = (sequelize, DataTypes) => {
       validated: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
       leaveAccrual: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 2.5 },
       minTax: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
+      // IANA name — lets country-scoped scheduled jobs (HR alerts digest) fire
+      // at the right local time instead of a single server-time schedule.
+      timezone: { type: DataTypes.STRING(60), allowNull: false, defaultValue: "UTC" },
       // Config-shaped, rarely queried nested data kept as native JSON columns
       // rather than exploded into more tables (see spec).
       contributionsJson: {

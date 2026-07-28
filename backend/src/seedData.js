@@ -32,6 +32,7 @@ function seedCountries() {
       name: "Madagascar",
       currency: "MGA",
       flag: "🇲🇬",
+      timezone: "Indian/Antananarivo",
       employee: [
         { label: "CNaPS", rate: 1 },
         { label: "OSTIE", rate: 1 },
@@ -59,6 +60,7 @@ function seedCountries() {
       name: "Cameroun",
       currency: "XAF",
       flag: "🇨🇲",
+      timezone: "Africa/Douala",
       employee: [{ label: "CNPS (pension)", rate: 4.2 }],
       employer: [{ label: "CNPS (pension+PF+AT)", rate: 11.2 }],
       tax: [
@@ -77,6 +79,7 @@ function seedCountries() {
       name: "Côte d'Ivoire",
       currency: "XOF",
       flag: "🇨🇮",
+      timezone: "Africa/Abidjan",
       employee: [{ label: "CNPS (retraite)", rate: 6.3 }],
       employer: [{ label: "CNPS (retraite+PF+AT)", rate: 15.75 }],
       tax: [
@@ -91,6 +94,7 @@ function seedCountries() {
       name: "Tchad",
       currency: "XAF",
       flag: "🇹🇩",
+      timezone: "Africa/Ndjamena",
       employee: [{ label: "CNPS", rate: 3.5 }],
       employer: [{ label: "CNPS + risques pro", rate: 16.5 }],
       tax: [
@@ -105,6 +109,7 @@ function seedCountries() {
       name: "Gabon",
       currency: "XAF",
       flag: "🇬🇦",
+      timezone: "Africa/Libreville",
       employee: [
         { label: "CNSS", rate: 2.5 },
         { label: "CNAMGS", rate: 1 },
@@ -122,6 +127,7 @@ function seedCountries() {
       name: "Mali",
       currency: "XOF",
       flag: "🇲🇱",
+      timezone: "Africa/Bamako",
       employee: [{ label: "INPS", rate: 3.6 }],
       employer: [{ label: "INPS+AMO+PF", rate: 17.4 }],
       tax: [

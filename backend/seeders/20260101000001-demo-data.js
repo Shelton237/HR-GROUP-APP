@@ -39,6 +39,7 @@ module.exports = {
             validated: c.validated,
             leaveAccrual: c.leaveAccrual,
             minTax: c.minTax,
+            timezone: c.timezone,
             contributionsJson: { employee: c.employee, employer: c.employer },
             taxBracketsJson: c.tax,
             checklistJson: c.checklist,

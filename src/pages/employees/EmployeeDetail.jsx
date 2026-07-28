@@ -175,6 +175,29 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
           <p className="text-xs text-slate-500 mb-3">
             Checklist du pays <strong>{ct?.name}</strong>. Elle se configure dans « Pays & fiscalité ».
           </p>
+          {(() => {
+            const items = ct?.checklist || [];
+            const done = items.filter((c) => e.checklist?.[c.key]).length;
+            const pct = items.length ? Math.round((done / items.length) * 100) : 100;
+            return (
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-sm mb-1.5">
+                  <span className="font-medium text-slate-700">
+                    Dossier rempli à {pct}% ({done}/{items.length})
+                  </span>
+                  <span className={pct === 100 ? "text-emerald-600 font-medium" : "text-amber-600 font-medium"}>
+                    {pct === 100 ? "Complet" : `${items.length - done} manquant${items.length - done > 1 ? "s" : ""}`}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${pct}%`, background: pct === 100 ? "#10b981" : BRAND }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
           {(ct?.checklist || []).map((c) => (
             <label key={c.key} className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
               <input

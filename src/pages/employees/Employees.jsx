@@ -123,7 +123,9 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
             {list.map((e) => {
               const comp = companyById(e.companyId);
               const ct = countryOf(comp?.countryCode);
+              const checklistTotal = (ct?.checklist || []).length;
               const missing = (ct?.checklist || []).filter((c) => !e.checklist?.[c.key]).length;
+              const pct = checklistTotal ? Math.round(((checklistTotal - missing) / checklistTotal) * 100) : 100;
               return (
                 <tr
                   key={e.id}
@@ -144,17 +146,26 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums font-medium">{fmt(e.salaryBrut, ct?.currency || "")}</td>
                   <td className="px-4 py-3">
-                    {missing === 0 ? (
-                      <Badge tone="green">
-                        <Check size={12} />
-                        Complet
-                      </Badge>
-                    ) : (
-                      <Badge tone="amber">
-                        <AlertTriangle size={12} />
-                        {missing} manquant{missing > 1 ? "s" : ""}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2 mb-1">
+                      {missing === 0 ? (
+                        <Badge tone="green">
+                          <Check size={12} />
+                          Complet
+                        </Badge>
+                      ) : (
+                        <Badge tone="amber">
+                          <AlertTriangle size={12} />
+                          {missing} manquant{missing > 1 ? "s" : ""}
+                        </Badge>
+                      )}
+                      <span className="text-xs text-slate-500 tabular-nums">{pct}%</span>
+                    </div>
+                    <div className="h-1 w-20 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${pct}%`, background: pct === 100 ? "#10b981" : "#E31E3D" }}
+                      />
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     {e.archived ? (
