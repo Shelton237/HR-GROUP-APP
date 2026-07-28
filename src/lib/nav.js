@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, Wallet, CalendarDays, Percent, Settings, CalendarClock } from "lucide-react";
+import { LayoutDashboard, Building2, Users, Wallet, CalendarDays, Percent, Settings, CalendarClock, UserCog } from "lucide-react";
 
 export const NAV = [
   { id: "dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -8,5 +8,6 @@ export const NAV = [
   { id: "leaves", label: "Congés", icon: CalendarDays },
   { id: "planning", label: "Planning", icon: CalendarClock },
   { id: "fiscalite", label: "Pays & fiscalité", icon: Percent },
+  { id: "users", label: "Utilisateurs", icon: UserCog },
   { id: "settings", label: "Paramètres", icon: Settings },
 ];

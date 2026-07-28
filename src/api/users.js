@@ -2,7 +2,7 @@ import { api } from "./client";
 
 /**
  * GET /users  (Admin only)
- * resp: Array<{ id, name, email, role, scope, active, mustChangePassword }>
+ * resp: Array<{ id, name, email, phone, role, scope, active, mustChangePassword }>
  */
 export function listUsers() {
   return api.get("/users");

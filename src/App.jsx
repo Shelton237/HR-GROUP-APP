@@ -12,6 +12,7 @@ import Fiscalite from "./pages/Fiscalite";
 import SettingsView from "./pages/Settings";
 import Planning from "./pages/planning/Planning";
 import AgentApp from "./pages/agent/AgentApp";
+import Users from "./pages/Users";
 
 export default function App() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -60,6 +61,7 @@ export default function App() {
           {view === "leaves" && <Leaves />}
           {view === "planning" && <Planning />}
           {view === "fiscalite" && <Fiscalite />}
+          {view === "users" && <Users />}
           {view === "settings" && <SettingsView />}
         </div>
       </main>

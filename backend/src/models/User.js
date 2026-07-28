@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       // "all" (string) or an array of company ids, matching the front-end shape exactly.
       scope: { type: DataTypes.JSON, allowNull: false, defaultValue: [] },
       active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+      phone: { type: DataTypes.STRING(40), allowNull: true, defaultValue: "" },
       // Set for role "Agent" — links the login to the RH employee it acts as
       // (self-service Planning access). Never trust a URL param for this scoping.
       employeeId: { type: DataTypes.STRING(40), allowNull: true, field: "employee_id" },

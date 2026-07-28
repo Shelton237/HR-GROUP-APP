@@ -8,6 +8,7 @@ const publicUser = (u) => ({
   id: u.id,
   name: u.name,
   email: u.email,
+  phone: u.phone,
   role: u.role,
   scope: u.scope,
   active: u.active,
@@ -20,7 +21,7 @@ const list = asyncHandler(async (req, res) => {
 });
 
 const create = asyncHandler(async (req, res) => {
-  const { name, email, role, scope } = req.body || {};
+  const { name, email, phone, role, scope } = req.body || {};
   if (!name || !email) throw new ApiError(400, "Nom et e-mail requis.");
   const existing = await db.User.findOne({ where: { email: String(email).toLowerCase().trim() } });
   if (existing) throw new ApiError(409, "Un compte existe déjà avec cet e-mail.");
@@ -29,6 +30,7 @@ const create = asyncHandler(async (req, res) => {
     id: uid("u"),
     name,
     email: String(email).toLowerCase().trim(),
+    phone: phone || "",
     passwordHash: bcrypt.hashSync(tempPassword, 10),
     mustChangePassword: true,
     role: role || "Lecture",
@@ -43,10 +45,11 @@ const create = asyncHandler(async (req, res) => {
 const update = asyncHandler(async (req, res) => {
   const user = await db.User.findByPk(req.params.id);
   if (!user) throw new ApiError(404, "Utilisateur introuvable.");
-  const { name, email, role, scope, active } = req.body || {};
+  const { name, email, phone, role, scope, active } = req.body || {};
   Object.assign(user, {
     ...(name !== undefined && { name }),
     ...(email !== undefined && { email: String(email).toLowerCase().trim() }),
+    ...(phone !== undefined && { phone }),
     ...(role !== undefined && { role }),
     ...(scope !== undefined && { scope }),
     ...(active !== undefined && { active: !!active }),

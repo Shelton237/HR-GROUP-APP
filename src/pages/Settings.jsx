@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ListChecks, Wallet, Pencil, ClipboardCheck, GraduationCap, UserCog, Bell, Info, Plus, Trash2, Mail, KeyRound } from "lucide-react";
+import { ListChecks, Wallet, Pencil, ClipboardCheck, GraduationCap, Bell, Info, Plus, Trash2, Mail } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { Btn } from "../components/ui/Btn";
@@ -7,9 +7,7 @@ import { Badge } from "../components/ui/Badge";
 import { StringListEditor } from "../components/ui/StringListEditor";
 import { inputCls, uid, BRAND, BRAND_DK } from "../lib/tokens";
 import { getSettings, updateSettings, getNotifications, updateNotifications } from "../api/settings";
-import { listCompanies } from "../api/companies";
 import { getAlerts } from "../api/dashboard";
-import { listUsers, createUser, updateUser, deleteUser, resetUserPassword } from "../api/users";
 
 function SettingCard({ title, children, onDelete }) {
   return (
@@ -62,45 +60,16 @@ export default function SettingsView() {
   const [tab, setTab] = useState("lists");
   const [settings, setSettings] = useState(null);
   const [notifications, setNotifications] = useState(null);
-  const [companies, setCompanies] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState({ name: "", email: "" });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getSettings(), getNotifications(), listCompanies(), listUsers()])
-      .then(([s, n, c, u]) => {
+    Promise.all([getSettings(), getNotifications()])
+      .then(([s, n]) => {
         setSettings(s || null);
         setNotifications(n || null);
-        setCompanies(c || []);
-        setUsers(u || []);
       })
       .finally(() => setLoading(false));
   }, []);
-
-  const patchUser = (id, patch) => {
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
-    updateUser(id, patch).catch(() => {});
-  };
-  const removeUser = (id) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    deleteUser(id).catch(() => {});
-  };
-  const resetPassword = async (u) => {
-    if (!confirm(`Réinitialiser le mot de passe de ${u.name} ?`)) return;
-    const res = await resetUserPassword(u.id);
-    setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, mustChangePassword: true } : x)));
-    alert(`Nouveau mot de passe temporaire pour ${res.email} : ${res.tempPassword}\n(à changer à la prochaine connexion)`);
-  };
-  const addUser = async () => {
-    if (!newUser.name.trim() || !newUser.email.trim()) return;
-    const created = await createUser({ name: newUser.name.trim(), email: newUser.email.trim(), role: "Lecture", scope: [] });
-    setUsers((prev) => [...prev, created]);
-    setNewUser({ name: "", email: "" });
-    if (created.tempPassword) {
-      alert(`Compte créé pour ${created.email}. Mot de passe temporaire à lui transmettre : ${created.tempPassword}`);
-    }
-  };
 
   const setS = (fn) => {
     setSettings((prev) => {
@@ -129,7 +98,6 @@ export default function SettingsView() {
     ["custom", "Champs personnalisés", Pencil],
     ["eval", "Grilles d'évaluation", ClipboardCheck],
     ["onboard", "Parcours d'intégration", GraduationCap],
-    ["users", "Comptes & rôles", UserCog],
     ["notif", "Notifications & Drive", Bell],
     ["data", "Données", Info],
   ];
@@ -438,84 +406,6 @@ export default function SettingsView() {
             Nouveau parcours
           </Btn>
         </div>
-      )}
-
-      {tab === "users" && (
-        <SettingCard title="Comptes utilisateurs & droits par entité">
-          <p className="text-xs text-slate-500 mb-3 flex items-center gap-1">
-            <Info size={12} />
-            La connexion réelle et le cloisonnement des accès sont gérés par le serveur. Ici vous définissez qui a accès à quoi.
-          </p>
-          <div className="space-y-2">
-            {users.map((u) => (
-              <div key={u.id} className="flex flex-wrap items-center gap-2 p-2 rounded-lg border border-slate-100">
-                <input className={inputCls + " w-40"} value={u.name} onChange={(e) => patchUser(u.id, { name: e.target.value })} />
-                <input className={inputCls + " flex-1 min-w-48"} value={u.email} onChange={(e) => patchUser(u.id, { email: e.target.value })} />
-                <select className={inputCls + " w-32"} value={u.role} onChange={(e) => patchUser(u.id, { role: e.target.value })}>
-                  {["Admin", "RH", "Manager", "Lecture"].map((r) => (
-                    <option key={r}>{r}</option>
-                  ))}
-                </select>
-                <select
-                  className={inputCls + " w-44"}
-                  value={u.scope === "all" ? "all" : "custom"}
-                  onChange={(e) => patchUser(u.id, { scope: e.target.value === "all" ? "all" : [] })}
-                >
-                  <option value="all">Toutes les sociétés</option>
-                  <option value="custom">Sociétés choisies</option>
-                </select>
-                <button
-                  onClick={() => resetPassword(u)}
-                  title="Réinitialiser le mot de passe"
-                  className="text-slate-400 hover:text-amber-600"
-                >
-                  <KeyRound size={15} />
-                </button>
-                <button onClick={() => removeUser(u.id)} className="text-slate-400 hover:text-rose-500">
-                  <Trash2 size={15} />
-                </button>
-                {u.scope !== "all" && (
-                  <div className="w-full flex flex-wrap gap-2 pl-1">
-                    {companies.map((c) => (
-                      <label key={c.id} className="flex items-center gap-1 text-xs text-slate-600">
-                        <input
-                          type="checkbox"
-                          className="accent-[#E31E3D]"
-                          checked={(u.scope || []).includes(c.id)}
-                          onChange={(e) => {
-                            const sc = new Set(u.scope || []);
-                            if (e.target.checked) sc.add(c.id);
-                            else sc.delete(c.id);
-                            patchUser(u.id, { scope: [...sc] });
-                          }}
-                        />
-                        {c.name}
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-2 mt-3 p-2 rounded-lg border border-dashed border-slate-200">
-            <input
-              className={inputCls + " w-40"}
-              placeholder="Nom"
-              value={newUser.name}
-              onChange={(e) => setNewUser((p) => ({ ...p, name: e.target.value }))}
-            />
-            <input
-              className={inputCls + " flex-1 min-w-48"}
-              placeholder="E-mail"
-              value={newUser.email}
-              onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))}
-            />
-            <Btn variant="outline" onClick={addUser}>
-              <Plus size={15} />
-              Ajouter un compte
-            </Btn>
-          </div>
-        </SettingCard>
       )}
 
       {tab === "notif" && (
