@@ -4,7 +4,7 @@ import { NAV } from "../../lib/nav";
 import { getAlerts } from "../../api/dashboard";
 import logo from "../../assets/logo.png";
 
-export function Sidebar({ view, onNavigate }) {
+export function Sidebar({ view, onNavigate, nav = NAV }) {
   const [alertCount, setAlertCount] = useState(0);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function Sidebar({ view, onNavigate }) {
         <img src={logo} alt="Thara Services" className="h-12 w-auto" />
       </div>
       <nav className="flex-1 p-3 space-y-1">
-        {NAV.map((n) => {
+        {nav.map((n) => {
           const a = view === n.id;
           const I = n.icon;
           return (

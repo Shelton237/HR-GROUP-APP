@@ -10,10 +10,11 @@ import { listUsers, createUser, updateUser, deleteUser, resetUserPassword } from
 import { listCompanies } from "../api/companies";
 import { ApiError } from "../api/client";
 
-const ROLES = ["Admin", "RH", "Manager", "Lecture", "Agent"];
+const ROLES = ["Admin", "RH", "Operateur", "Manager", "Lecture", "Agent"];
 const ROLE_BADGE = {
   Admin: "rose",
   RH: "green",
+  Operateur: "blue",
   Manager: "amber",
   Lecture: "slate",
   Agent: "teal",

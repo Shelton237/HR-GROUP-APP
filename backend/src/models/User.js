@@ -12,8 +12,12 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: false,
         field: "must_change_password",
       },
+      // "Operateur" has the exact same permissions as "RH" (see requireRole in
+      // middlewares/auth.js, which treats it as an RH alias) — the only
+      // difference is it never sees the consolidated Dashboard, only its
+      // scoped companies' day-to-day data.
       role: {
-        type: DataTypes.ENUM("Admin", "RH", "Manager", "Lecture", "Agent"),
+        type: DataTypes.ENUM("Admin", "RH", "Manager", "Lecture", "Agent", "Operateur"),
         allowNull: false,
         defaultValue: "Lecture",
       },

@@ -55,11 +55,17 @@ function requireSelfEmployee(req, res, next) {
   next();
 }
 
-/** Restricts a route to a fixed set of roles. Admin is implicitly always allowed. */
+/**
+ * Restricts a route to a fixed set of roles. Admin is implicitly always
+ * allowed. "Operateur" is treated as an alias of "RH" everywhere — it has
+ * the exact same permissions, the only difference (Dashboard visibility) is
+ * enforced separately, not through this role gate.
+ */
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) return next(new ApiError(401, "Authentification requise."));
-    if (req.user.role === "Admin" || roles.includes(req.user.role)) return next();
+    const effectiveRole = req.user.role === "Operateur" ? "RH" : req.user.role;
+    if (effectiveRole === "Admin" || roles.includes(effectiveRole)) return next();
     return next(new ApiError(403, "Droits insuffisants pour cette action."));
   };
 }
