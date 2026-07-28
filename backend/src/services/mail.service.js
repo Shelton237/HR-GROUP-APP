@@ -43,4 +43,4 @@ Thara Services Madagascar`;
   return sendMail(to, "Votre accès au Planning Control Room", text);
 }
 
-module.exports = { sendPlanningMail, sendWelcomeAgentMail };
+module.exports = { sendMail, sendPlanningMail, sendWelcomeAgentMail };

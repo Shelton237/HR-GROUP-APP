@@ -14,6 +14,7 @@ async function start() {
     console.log("Database connection established.");
     if (process.env.NODE_ENV !== "test") {
       require("./jobs/weeklyDiffusion.job").start();
+      require("./jobs/dossierAlerts.job").start();
     }
     app.listen(PORT, () => {
       // eslint-disable-next-line no-console

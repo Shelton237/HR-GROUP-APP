@@ -138,4 +138,4 @@ const summary = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { alerts, summary };
+module.exports = { alerts, summary, buildAlertsData };
