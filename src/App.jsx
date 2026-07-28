@@ -20,11 +20,13 @@ export default function App() {
   const [view, setView] = useState("dashboard");
   const [companyFilter, setCompanyFilter] = useState(null);
 
-  // "Operateur" has no Dashboard (consolidated multi-company view) — bounce
-  // off it to Salariés the moment we know the role, since `view` was
-  // initialized before the user (and their role) had loaded.
+  // "Operateur" has no Dashboard (consolidated multi-company view), and the
+  // Utilisateurs module is Admin-only (matches the backend's requireRole()
+  // gate on /api/users) — bounce off either the moment we know the role,
+  // since `view` was initialized before the user (and their role) had loaded.
   useEffect(() => {
     if (user?.role === "Operateur" && view === "dashboard") setView("employees");
+    if (user?.role !== "Admin" && view === "users") setView("employees");
   }, [user, view]);
 
   if (isLoading) {
@@ -51,7 +53,15 @@ export default function App() {
       className="min-h-screen flex text-slate-800"
       style={{ background: "#F4F6F8", fontFamily: "ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" }}
     >
-      <Sidebar view={view} onNavigate={navigate} nav={user?.role === "Operateur" ? NAV.filter((n) => n.id !== "dashboard") : NAV} />
+      <Sidebar
+        view={view}
+        onNavigate={navigate}
+        nav={NAV.filter((n) => {
+          if (n.id === "dashboard" && user?.role === "Operateur") return false;
+          if (n.id === "users" && user?.role !== "Admin") return false;
+          return true;
+        })}
+      />
       <main className="flex-1 min-w-0 flex flex-col">
         <Header view={view} />
         <div className="flex-1 overflow-y-auto p-6">
