@@ -3,6 +3,7 @@ const db = require("../models");
 const { ApiError, asyncHandler } = require("../middlewares/error");
 const { hasCompanyScope, scopedCompanyIds } = require("../middlewares/auth");
 const { computePay } = require("../services/payroll.service");
+const { getUnjustifiedAbsenceDays } = require("../services/absenceDeduction.service");
 
 const uid = (p) => p + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
@@ -498,11 +499,13 @@ const payroll = asyncHandler(async (req, res) => {
 
   const overtimeRows = await db.EmployeeOvertime.findAll({ where: { employeeId: employee.id, month } });
   const payVarRows = await db.EmployeePayVar.findAll({ where: { employeeId: employee.id, month } });
+  const unjustifiedAbsenceDays = await getUnjustifiedAbsenceDays(employee.id, month, settings);
 
   const employeeShape = {
     salaryBrut: employee.salaryBrut,
     overtime: { [month]: overtimeRows.map((o) => o.toJSON()) },
     payVars: { [month]: payVarRows.map((v) => v.toJSON()) },
+    unjustifiedAbsenceDays,
   };
   const countryShape = country
     ? {

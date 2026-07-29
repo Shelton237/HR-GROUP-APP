@@ -3,6 +3,7 @@ const {
   progressiveTax,
   overtimeTotal,
   computePay,
+  daysOverlappingMonth,
 } = require("../../src/services/payroll.service");
 const { seedCountries } = require("../../src/seedData");
 
@@ -145,7 +146,20 @@ describe("computePay", () => {
   it("returns all-zero pay for a 0 salary employee with no country", () => {
     const e = { salaryBrut: 0 };
     const p = computePay(e, null, "2026-07", settings);
-    expect(p).toEqual({ brut: 0, ot: 0, gainAll: 0, retenues: 0, empContrib: 0, tax: 0, net: 0, emrContrib: 0, cost: 0 });
+    expect(p).toEqual({
+      baseSalary: 0,
+      absenceDays: 0,
+      absenceDeduction: 0,
+      brut: 0,
+      ot: 0,
+      gainAll: 0,
+      retenues: 0,
+      empContrib: 0,
+      tax: 0,
+      net: 0,
+      emrContrib: 0,
+      cost: 0,
+    });
   });
 
   it("Madagascar: matches the manually-verified 600000 MGA case (Andrianina Tovo fixture)", () => {
@@ -221,5 +235,49 @@ describe("computePay", () => {
     const p = computePay(e, asCountryShape(countries.ML), "2026-07", settings);
     expect(p.empContrib).toBeCloseTo(700000 * 0.036, 6);
     expect(p.emrContrib).toBeCloseTo(700000 * 0.174, 6);
+  });
+
+  describe("unjustified absence deduction", () => {
+    it("reduces the effective brut proportionally, before contributions/tax are computed", () => {
+      const e = { salaryBrut: 600000, unjustifiedAbsenceDays: 2 };
+      const p = computePay(e, asCountryShape(countries.MG), "2026-07", settings);
+      const legalMonthlyDays = settings.legalMonthlyHours / 8;
+      const expectedDeduction = (600000 / legalMonthlyDays) * 2;
+      expect(p.baseSalary).toBe(600000);
+      expect(p.absenceDays).toBe(2);
+      expect(p.absenceDeduction).toBeCloseTo(expectedDeduction, 6);
+      expect(p.brut).toBeCloseTo(600000 - expectedDeduction, 6);
+      // Contributions/tax must be computed on the REDUCED brut, not the nominal salary.
+      expect(p.empContrib).toBeCloseTo(p.brut * 0.02, 6);
+    });
+
+    it("never pushes the effective brut below zero even with an absurd absence count", () => {
+      const e = { salaryBrut: 600000, unjustifiedAbsenceDays: 100 };
+      const p = computePay(e, asCountryShape(countries.MG), "2026-07", settings);
+      expect(p.brut).toBe(0);
+    });
+
+    it("leaves pay unaffected when there are no unjustified absence days (default)", () => {
+      const e = { salaryBrut: 600000 };
+      const p = computePay(e, asCountryShape(countries.MG), "2026-07", settings);
+      expect(p.absenceDays).toBe(0);
+      expect(p.absenceDeduction).toBe(0);
+      expect(p.brut).toBe(600000);
+    });
+  });
+});
+
+describe("daysOverlappingMonth", () => {
+  it("counts the full range when it falls entirely inside the month", () => {
+    expect(daysOverlappingMonth("2026-07-10", "2026-07-12", "2026-07")).toBe(3);
+  });
+
+  it("counts only the days that actually fall in the requested month, for a range spanning two months", () => {
+    expect(daysOverlappingMonth("2026-06-28", "2026-07-03", "2026-07")).toBe(3); // Jul 1,2,3
+    expect(daysOverlappingMonth("2026-06-28", "2026-07-03", "2026-06")).toBe(3); // Jun 28,29,30
+  });
+
+  it("returns 0 for a range entirely outside the requested month", () => {
+    expect(daysOverlappingMonth("2026-05-01", "2026-05-05", "2026-07")).toBe(0);
   });
 });

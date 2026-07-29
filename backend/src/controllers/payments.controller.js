@@ -2,6 +2,7 @@ const db = require("../models");
 const { ApiError, asyncHandler } = require("../middlewares/error");
 const { hasCompanyScope } = require("../middlewares/auth");
 const { computePay } = require("../services/payroll.service");
+const { getUnjustifiedAbsenceDays } = require("../services/absenceDeduction.service");
 
 // GET /api/payroll/summary?companyId=&month=
 // Mirrors the Payroll view in App.jsx: per-company, per-month payroll table
@@ -36,10 +37,12 @@ const summary = asyncHandler(async (req, res) => {
   for (const e of employees) {
     const overtimeRows = await db.EmployeeOvertime.findAll({ where: { employeeId: e.id, month } });
     const payVarRows = await db.EmployeePayVar.findAll({ where: { employeeId: e.id, month } });
+    const unjustifiedAbsenceDays = await getUnjustifiedAbsenceDays(e.id, month, settings);
     const employeeShape = {
       salaryBrut: e.salaryBrut,
       overtime: { [month]: overtimeRows.map((o) => o.toJSON()) },
       payVars: { [month]: payVarRows.map((v) => v.toJSON()) },
+      unjustifiedAbsenceDays,
     };
     const p = computePay(employeeShape, countryShape, month, settingsShape);
     const [payment] = await db.Payment.findOrCreate({

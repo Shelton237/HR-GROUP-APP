@@ -174,6 +174,15 @@ export default function SettingsView() {
                     value={t.accrual}
                     onChange={(e) => setS((x) => { x.leaveTypes[i].accrual = Number(e.target.value); })}
                   />
+                  <label className="flex items-center gap-1 text-xs text-slate-500" title="Réduit le salaire brut au prorata des jours, avant cotisations/impôt">
+                    <input
+                      type="checkbox"
+                      className="accent-[#E31E3D]"
+                      checked={!!t.deductFromPay}
+                      onChange={(e) => setS((x) => { x.leaveTypes[i].deductFromPay = e.target.checked; })}
+                    />
+                    retenue paie
+                  </label>
                   <button onClick={() => setS((x) => { x.leaveTypes.splice(i, 1); })} className="text-slate-400 hover:text-rose-500">
                     <Trash2 size={14} />
                   </button>

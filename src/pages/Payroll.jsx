@@ -104,6 +104,11 @@ export default function Payroll() {
                       {r.employee.firstName} {r.employee.lastName}
                     </div>
                     <div className="text-xs text-slate-500">{r.employee.poste}</div>
+                    {r.pay.absenceDays > 0 && (
+                      <div className="text-xs text-[#E31E3D] mt-0.5">
+                        {r.pay.absenceDays} j absence injustifiée (– {fmt(r.pay.absenceDeduction, currency)})
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">{fmt(r.pay.brut + r.pay.gainAll, currency)}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-slate-500">– {fmt(r.pay.empContrib + r.pay.tax, currency)}</td>

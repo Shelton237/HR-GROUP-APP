@@ -19,6 +19,19 @@ function daysBetween(a, b) {
   return Math.round((b - a) / 86400000);
 }
 
+/** Nombre de jours d'un intervalle [start, end] qui tombent dans le mois "YYYY-MM" donné. */
+function daysOverlappingMonth(start, end, month) {
+  const [y, m] = month.split("-").map(Number);
+  const monthStart = new Date(Date.UTC(y, m - 1, 1));
+  const monthEnd = new Date(Date.UTC(y, m, 0));
+  const s = new Date(start);
+  const e = new Date(end);
+  const overlapStart = s > monthStart ? s : monthStart;
+  const overlapEnd = e < monthEnd ? e : monthEnd;
+  if (overlapEnd < overlapStart) return 0;
+  return daysBetween(overlapStart, overlapEnd) + 1;
+}
+
 function contribTotal(list, base) {
   return (list || []).reduce(
     (s, c) => s + (c.ceiling ? Math.min(base, c.ceiling) : base) * (c.rate / 100),
@@ -49,7 +62,16 @@ function overtimeTotal(e, month, legalHours) {
 }
 
 function computePay(e, country, month, settings) {
-  const brut = e.salaryBrut || 0;
+  const baseSalary = e.salaryBrut || 0;
+  // Absences non justifiées (validées) : réduisent le brut au prorata des
+  // jours ouvrés du mois, AVANT cotisations/impôt — pas une simple retenue
+  // sur le net, la base de calcul elle-même est réduite.
+  const legalMonthlyDays = (settings && settings.legalMonthlyHours ? settings.legalMonthlyHours : 173.33) / 8;
+  const absenceDays = e.unjustifiedAbsenceDays || 0;
+  const absenceDeduction =
+    legalMonthlyDays > 0 ? Math.min(baseSalary, (baseSalary / legalMonthlyDays) * absenceDays) : 0;
+  const brut = Math.max(0, baseSalary - absenceDeduction);
+
   const ot = overtimeTotal(e, month, settings && settings.legalMonthlyHours);
   const vars = (e.payVars && e.payVars[month]) || [];
   let gainTax = ot,
@@ -72,12 +94,13 @@ function computePay(e, country, month, settings) {
   const emrContrib = country ? contribTotal(country.employer, cotBase) : 0;
   const net = brut + gainAll - empContrib - tax - retenues;
   const cost = brut + gainAll + emrContrib;
-  return { brut, ot, gainAll, retenues, empContrib, tax, net, emrContrib, cost };
+  return { baseSalary, absenceDays, absenceDeduction, brut, ot, gainAll, retenues, empContrib, tax, net, emrContrib, cost };
 }
 
 module.exports = {
   addMonths,
   daysBetween,
+  daysOverlappingMonth,
   contribTotal,
   progressiveTax,
   overtimeTotal,

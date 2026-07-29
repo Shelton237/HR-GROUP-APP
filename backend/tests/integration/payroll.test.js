@@ -116,6 +116,50 @@ describe("Payroll", () => {
     });
   });
 
+  it("deducts validated 'Absence injustifiée' days from the effective brut, reflected in both the summary and the per-employee payroll endpoint", async () => {
+    const employees = await request(app)
+      .get(`/api/employees?companyId=${C1}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    const employee = employees.body.find((e) => e.status === "Actif");
+    const month = "2026-10";
+
+    const before = await request(app)
+      .get(`/api/employees/${employee.id}/payroll?month=${month}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(before.body.absenceDays).toBe(0);
+
+    const leave = await request(app)
+      .post("/api/leaves")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ employeeId: employee.id, type: "Absence injustifiée", start: `${month}-05`, end: `${month}-06` });
+    expect(leave.status).toBe(201);
+
+    // Unvalidated absences must not affect pay yet.
+    const stillBefore = await request(app)
+      .get(`/api/employees/${employee.id}/payroll?month=${month}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(stillBefore.body.absenceDays).toBe(0);
+
+    await request(app)
+      .put(`/api/leaves/${leave.body.id}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "Validé" });
+
+    const after = await request(app)
+      .get(`/api/employees/${employee.id}/payroll?month=${month}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(after.body.absenceDays).toBe(2);
+    expect(after.body.absenceDeduction).toBeGreaterThan(0);
+    expect(after.body.brut).toBeCloseTo(employee.salaryBrut - after.body.absenceDeduction, 6);
+
+    const summary = await request(app)
+      .get(`/api/payroll/summary?companyId=${C1}&month=${month}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    const row = summary.body.rows.find((r) => r.employee.id === employee.id);
+    expect(row.pay.absenceDays).toBe(2);
+    expect(row.pay.brut).toBeCloseTo(after.body.brut, 6);
+  });
+
   it("rejects payroll summary requests for a company outside the caller's scope", async () => {
     const passwords2 = passwords;
     const managerToken = await loginAs("ads360@groupe.mg", passwords2.managerTempPassword);

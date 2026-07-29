@@ -65,6 +65,7 @@ module.exports = {
             { name: "Sans solde", paid: false, accrual: 0 },
             { name: "Maternité / paternité", paid: true, accrual: 0 },
             { name: "Événement familial", paid: true, accrual: 0 },
+            { name: "Absence injustifiée", paid: false, accrual: 0, deductFromPay: true },
           ],
           warningTypes: ["Rappel à l'ordre", "Avertissement", "Blâme", "Mise à pied"],
           evalDecisions: ["Confirmation", "Renouvellement essai", "Plan d'amélioration", "Rupture"],
