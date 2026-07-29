@@ -99,6 +99,23 @@ describe("Payroll", () => {
     expect(row.status).toEqual({ validated: true, paid: true });
   });
 
+  it("excludes employees on 'Période d'essai' from the payroll summary (Actif only)", async () => {
+    const employees = await request(app)
+      .get(`/api/employees?companyId=${C1}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    const onTrial = employees.body.find((e) => e.status === "Période d'essai");
+    expect(onTrial).toBeDefined();
+
+    const summary = await request(app)
+      .get(`/api/payroll/summary?companyId=${C1}&month=2026-07`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(summary.body.rows.some((r) => r.employee.id === onTrial.id)).toBe(false);
+    summary.body.rows.forEach((r) => {
+      const e = employees.body.find((x) => x.id === r.employee.id);
+      expect(e.status).toBe("Actif");
+    });
+  });
+
   it("rejects payroll summary requests for a company outside the caller's scope", async () => {
     const passwords2 = passwords;
     const managerToken = await loginAs("ads360@groupe.mg", passwords2.managerTempPassword);

@@ -99,12 +99,28 @@ export default function InfosTab({ e, s, patch, employeeId, onChanged }) {
         <h4 className="text-sm font-semibold text-slate-700 mb-3">Poste & rattachement</h4>
         <div className="grid grid-cols-3 gap-3">
           <Field label="Type de contrat">
-            <select className={inputCls} value={e.contractType} onChange={(ev) => set("contractType", ev.target.value)}>
+            <select
+              className={inputCls}
+              value={e.contractType}
+              onChange={(ev) => {
+                set("contractType", ev.target.value);
+                if (ev.target.value !== "Stage") set("internshipType", "");
+              }}
+            >
               {s.contractTypes.map((t) => (
                 <option key={t}>{t}</option>
               ))}
             </select>
           </Field>
+          {e.contractType === "Stage" && (
+            <Field label="Type de stage">
+              <select className={inputCls} value={e.internshipType || ""} onChange={(ev) => set("internshipType", ev.target.value)}>
+                <option value="">—</option>
+                <option value="Académique">Académique</option>
+                <option value="Professionnel">Professionnel</option>
+              </select>
+            </Field>
+          )}
           {e.contractType === "CDD" && (
             <Field label="Fin de CDD">
               <input type="date" className={inputCls} value={e.contractEndDate} onChange={(ev) => set("contractEndDate", ev.target.value)} />

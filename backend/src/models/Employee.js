@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
       lastName: { type: DataTypes.STRING(100), allowNull: false, field: "last_name" },
       poste: { type: DataTypes.STRING(150), allowNull: true, defaultValue: "" },
       contractType: { type: DataTypes.STRING(60), allowNull: true, field: "contract_type" },
+      // Only meaningful when contractType === "Stage" — "Académique" | "Professionnel".
+      internshipType: { type: DataTypes.STRING(30), allowNull: true, field: "internship_type" },
       hireDate: { type: DataTypes.DATEONLY, allowNull: true, field: "hire_date" },
       contractEndDate: { type: DataTypes.DATEONLY, allowNull: true, field: "contract_end_date" },
       salaryBrut: { type: DataTypes.DOUBLE, allowNull: false, defaultValue: 0, field: "salary_brut" },

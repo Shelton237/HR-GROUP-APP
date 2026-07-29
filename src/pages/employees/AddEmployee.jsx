@@ -59,12 +59,25 @@ export default function AddEmployee({ companies, settings: s, onClose, onCreated
           </select>
         </Field>
         <Field label="Type de contrat">
-          <select className={inputCls} value={f.contractType} onChange={(e) => setF({ ...f, contractType: e.target.value })}>
+          <select
+            className={inputCls}
+            value={f.contractType}
+            onChange={(e) => setF({ ...f, contractType: e.target.value, internshipType: e.target.value === "Stage" ? f.internshipType : "" })}
+          >
             {s.contractTypes.map((t) => (
               <option key={t}>{t}</option>
             ))}
           </select>
         </Field>
+        {f.contractType === "Stage" && (
+          <Field label="Type de stage">
+            <select className={inputCls} value={f.internshipType || ""} onChange={(e) => setF({ ...f, internshipType: e.target.value })}>
+              <option value="">—</option>
+              <option value="Académique">Académique</option>
+              <option value="Professionnel">Professionnel</option>
+            </select>
+          </Field>
+        )}
         <Field label="Date d'embauche">
           <input type="date" className={inputCls} value={f.hireDate} onChange={(e) => setF({ ...f, hireDate: e.target.value })} />
         </Field>
