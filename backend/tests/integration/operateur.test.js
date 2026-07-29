@@ -55,4 +55,16 @@ describe("Operateur role", () => {
     const alerts = await request(app).get("/api/dashboard/alerts").set("Authorization", `Bearer ${rhToken}`);
     expect(alerts.status).toBe(200);
   });
+
+  it("is blocked from the entire Planning module (unlike RH, which has full access there)", async () => {
+    const rooms = await request(app).get("/api/planning/rooms").set("Authorization", `Bearer ${operateurToken}`);
+    expect(rooms.status).toBe(403);
+
+    const agents = await request(app).get("/api/planning/agents").set("Authorization", `Bearer ${operateurToken}`);
+    expect(agents.status).toBe(403);
+
+    const rhToken = await loginAs("rh.mg@groupe.mg", passwords.rhTempPassword);
+    const rhRooms = await request(app).get("/api/planning/rooms").set("Authorization", `Bearer ${rhToken}`);
+    expect(rhRooms.status).toBe(200);
+  });
 });

@@ -20,12 +20,13 @@ export default function App() {
   const [view, setView] = useState("dashboard");
   const [companyFilter, setCompanyFilter] = useState(null);
 
-  // "Operateur" has no Dashboard (consolidated multi-company view), and the
-  // Utilisateurs module is Admin-only (matches the backend's requireRole()
-  // gate on /api/users) — bounce off either the moment we know the role,
-  // since `view` was initialized before the user (and their role) had loaded.
+  // "Operateur" has no Dashboard (consolidated multi-company view) and no
+  // Planning module at all, and Utilisateurs is Admin-only (matches the
+  // backend's requireRole()/blockOperateur gates) — bounce off any of these
+  // the moment we know the role, since `view` was initialized before the
+  // user (and their role) had loaded.
   useEffect(() => {
-    if (user?.role === "Operateur" && view === "dashboard") setView("employees");
+    if (user?.role === "Operateur" && (view === "dashboard" || view === "planning")) setView("employees");
     if (user?.role !== "Admin" && view === "users") setView("employees");
   }, [user, view]);
 
@@ -57,7 +58,7 @@ export default function App() {
         view={view}
         onNavigate={navigate}
         nav={NAV.filter((n) => {
-          if (n.id === "dashboard" && user?.role === "Operateur") return false;
+          if (user?.role === "Operateur" && (n.id === "dashboard" || n.id === "planning")) return false;
           if (n.id === "users" && user?.role !== "Admin") return false;
           return true;
         })}

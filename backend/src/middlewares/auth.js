@@ -70,6 +70,16 @@ function requireRole(...roles) {
   };
 }
 
+/**
+ * "Operateur" has RH-equivalent permissions everywhere requireRole() checks,
+ * but is explicitly excluded from certain whole modules (Dashboard, Planning)
+ * that requireRole() alone can't express since it aliases Operateur to RH.
+ */
+function blockOperateur(req, res, next) {
+  if (req.user?.role === "Operateur") return next(new ApiError(403, "Non disponible pour ce rôle."));
+  next();
+}
+
 /** "Lecture" is a read-only role; blocks it from any mutating request. */
 function blockReadOnly(req, res, next) {
   if (!req.user) return next(new ApiError(401, "Authentification requise."));
@@ -117,6 +127,7 @@ module.exports = {
   authenticate,
   requireRole,
   requireSelfEmployee,
+  blockOperateur,
   blockReadOnly,
   hasCompanyScope,
   scopedCompanyIds,

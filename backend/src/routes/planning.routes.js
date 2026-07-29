@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { authenticate, requireRole, requireSelfEmployee, blockReadOnly } = require("../middlewares/auth");
+const { authenticate, requireRole, requireSelfEmployee, blockOperateur, blockReadOnly } = require("../middlewares/auth");
 const rooms = require("../controllers/planning/rooms.controller");
 const agents = require("../controllers/planning/agents.controller");
 const schedule = require("../controllers/planning/schedule.controller");
@@ -7,7 +7,9 @@ const absences = require("../controllers/planning/absences.controller");
 const diffusion = require("../controllers/planning/diffusion.controller");
 const me = require("../controllers/planning/me.controller");
 
-router.use(authenticate, blockReadOnly);
+// "Operateur" has no access to the Planning module at all — unlike other
+// modules where it mirrors RH's permissions, this one is fully off-limits.
+router.use(authenticate, blockOperateur, blockReadOnly);
 
 const manager = requireRole("RH", "Manager");
 
