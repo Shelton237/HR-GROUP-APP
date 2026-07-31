@@ -7,6 +7,7 @@ import { Badge } from "../components/ui/Badge";
 import { StringListEditor } from "../components/ui/StringListEditor";
 import { inputCls, inputClsAuto, uid, BRAND, BRAND_DK } from "../lib/tokens";
 import { getSettings, updateSettings, getNotifications, updateNotifications } from "../api/settings";
+import { ApiError } from "../api/client";
 import { getAlerts } from "../api/dashboard";
 import { getAuditLogs } from "../api/auditLog";
 import { useAuth } from "../auth/useAuth";
@@ -132,6 +133,7 @@ export default function SettingsView() {
   const [settings, setSettings] = useState(null);
   const [notifications, setNotifications] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     Promise.all([getSettings(), getNotifications()])
@@ -142,21 +144,30 @@ export default function SettingsView() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Optimistic, but reverted on failure — a silent .catch(() => {}) here used
+  // to leave a user with insufficient rights (e.g. Operateur) staring at a
+  // change that LOOKED saved but never persisted, with no indication why.
   const setS = (fn) => {
-    setSettings((prev) => {
-      const next = structuredClone(prev);
-      fn(next);
-      updateSettings(next).catch(() => {});
-      return next;
+    const prev = settings;
+    const next = structuredClone(prev);
+    fn(next);
+    setSettings(next);
+    setSaveError("");
+    updateSettings(next).catch((e) => {
+      setSettings(prev);
+      setSaveError(e instanceof ApiError ? e.message : "Impossible d'enregistrer les paramètres.");
     });
   };
 
   const setN = (fn) => {
-    setNotifications((prev) => {
-      const next = structuredClone(prev);
-      fn(next);
-      updateNotifications(next).catch(() => {});
-      return next;
+    const prev = notifications;
+    const next = structuredClone(prev);
+    fn(next);
+    setNotifications(next);
+    setSaveError("");
+    updateNotifications(next).catch((e) => {
+      setNotifications(prev);
+      setSaveError(e instanceof ApiError ? e.message : "Impossible d'enregistrer les paramètres.");
     });
   };
 
@@ -176,6 +187,14 @@ export default function SettingsView() {
 
   return (
     <div className="space-y-4">
+      {saveError && (
+        <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3">
+          <span>{saveError}</span>
+          <button onClick={() => setSaveError("")} className="text-rose-400 hover:text-rose-600 shrink-0">
+            ✕
+          </button>
+        </div>
+      )}
       <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
         {tabs.map(([id, l, I]) => (
           <button
