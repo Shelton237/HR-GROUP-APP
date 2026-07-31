@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Card } from "../../components/ui/Card";
 import { Btn } from "../../components/ui/Btn";
-import { inputCls } from "../../lib/tokens";
+import { inputCls, inputClsAuto } from "../../lib/tokens";
 import { addDaysISO, fmtShort, isoWeekNum, mondayISOof, todayISO } from "../../lib/planningDates";
 import { getDiffusionPreview, sendDiffusion } from "../../api/planning";
 import { ApiError } from "../../api/client";
@@ -26,13 +26,13 @@ async function copyText(text) {
 function WeekNav({ weekStart, onChange }) {
   return (
     <div className="flex items-center gap-2">
-      <button type="button" className={inputCls + " w-auto px-3 py-1.5"} onClick={() => onChange(addDaysISO(weekStart, -7))}>
+      <button type="button" className={inputClsAuto + " px-3 py-1.5"} onClick={() => onChange(addDaysISO(weekStart, -7))}>
         ‹
       </button>
       <b className="min-w-[190px] text-center inline-block text-sm">
         {fmtShort(weekStart)} – {fmtShort(addDaysISO(weekStart, 6))} · S{isoWeekNum(weekStart)}
       </b>
-      <button type="button" className={inputCls + " w-auto px-3 py-1.5"} onClick={() => onChange(addDaysISO(weekStart, 7))}>
+      <button type="button" className={inputClsAuto + " px-3 py-1.5"} onClick={() => onChange(addDaysISO(weekStart, 7))}>
         ›
       </button>
       <Btn variant="outline" onClick={() => onChange(mondayISOof(todayISO()))}>

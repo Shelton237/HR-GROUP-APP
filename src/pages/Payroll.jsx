@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Check, Wallet, Landmark, Building2, Info, Zap, Plus, Search } from "lucide-react";
+import { Check, Wallet, Landmark, Building2, Info, Zap, Plus, Search, Filter, CalendarDays } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Kpi } from "../components/ui/Kpi";
 import { Btn } from "../components/ui/Btn";
 import { Badge } from "../components/ui/Badge";
 import { Modal } from "../components/ui/Modal";
 import { Field } from "../components/ui/Field";
-import { inputCls, BRAND_DK, BRAND_WASH, BRAND, AMBER } from "../lib/tokens";
+import { inputCls, inputClsAuto, BRAND_DK, BRAND_WASH, BRAND, AMBER } from "../lib/tokens";
 import { fmt, monthNow } from "../lib/format";
 import { listCompanies } from "../api/companies";
 import { listEmployees } from "../api/employees";
@@ -87,14 +87,25 @@ function SummaryTab() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <select className={inputCls + " w-56"} value={comp} onChange={(e) => setComp(e.target.value)}>
-          {companies.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <input type="month" className={inputCls + " w-44"} value={month} onChange={(e) => setMonth(e.target.value)} />
+        <div className="relative">
+          <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <select className={inputClsAuto + " pl-8 w-56"} value={comp} onChange={(e) => setComp(e.target.value)}>
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="relative">
+          <CalendarDays size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="month"
+            className={inputClsAuto + " pl-8 w-44"}
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+          />
+        </div>
         <div className="ml-auto flex gap-2">
           <Btn variant="outline" onClick={validateAll}>
             <Check size={16} />
@@ -315,18 +326,29 @@ function BulletinsTab({ onGoto }) {
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
-            className={inputCls + " pl-9 w-64"}
+            className={inputClsAuto + " pl-9 w-64"}
             placeholder="Rechercher un employé…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className={inputCls + " w-40"} value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="all">Tous statuts</option>
-          <option value="paid">Payée</option>
-          <option value="unpaid">À payer</option>
-        </select>
-        <input type="month" className={inputCls + " w-44"} value={month} onChange={(e) => setMonth(e.target.value)} />
+        <div className="relative">
+          <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <select className={inputClsAuto + " pl-8 w-40"} value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="all">Tous statuts</option>
+            <option value="paid">Payée</option>
+            <option value="unpaid">À payer</option>
+          </select>
+        </div>
+        <div className="relative">
+          <CalendarDays size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="month"
+            className={inputClsAuto + " pl-8 w-44"}
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+          />
+        </div>
       </div>
 
       <Card className="overflow-hidden">

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Card } from "../../components/ui/Card";
 import { Btn } from "../../components/ui/Btn";
-import { inputCls } from "../../lib/tokens";
+import { inputCls, inputClsAuto } from "../../lib/tokens";
 import { addDaysISO, fmtShort, isoWeekNum, mondayISOof, todayISO, weekParity } from "../../lib/planningDates";
 import { getRoomSchedule, listPlanningAgents, patchScheduleCell, resetWeek, addLoan, removeLoan } from "../../api/planning";
 import { PlanningGrid, Legend } from "./PlanningGrid";
@@ -13,14 +13,14 @@ const nextValue = (current) => CYCLE_ORDER[(CYCLE_ORDER.indexOf(current) + 1) % 
 function WeekNav({ weekStart, onChange }) {
   return (
     <div className="flex items-center gap-2">
-      <button type="button" className={inputCls + " w-auto px-3 py-1.5"} onClick={() => onChange(addDaysISO(weekStart, -7))}>
+      <button type="button" className={inputClsAuto + " px-3 py-1.5"} onClick={() => onChange(addDaysISO(weekStart, -7))}>
         ‹
       </button>
       <b className="min-w-[230px] text-center inline-block text-sm">
         {fmtShort(weekStart)} – {fmtShort(addDaysISO(weekStart, 6))} · S{isoWeekNum(weekStart)} (
         {weekParity(weekStart) ? "impaire" : "paire"})
       </b>
-      <button type="button" className={inputCls + " w-auto px-3 py-1.5"} onClick={() => onChange(addDaysISO(weekStart, 7))}>
+      <button type="button" className={inputClsAuto + " px-3 py-1.5"} onClick={() => onChange(addDaysISO(weekStart, 7))}>
         ›
       </button>
       <Btn variant="outline" onClick={() => onChange(mondayISOof(todayISO()))}>

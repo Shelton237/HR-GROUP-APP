@@ -4,7 +4,7 @@ import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { Btn } from "../components/ui/Btn";
 import { Badge } from "../components/ui/Badge";
-import { inputCls, uid, INK, BRAND, BRAND_DK, AMBER } from "../lib/tokens";
+import { inputCls, inputClsAuto, uid, INK, BRAND, BRAND_DK, AMBER } from "../lib/tokens";
 import { listCountries, updateCountryBase, updateContributions, updateTax, updateChecklist, updateHolidays } from "../api/countries";
 import { getSettings, updateSettings } from "../api/settings";
 
@@ -185,7 +185,7 @@ export default function Fiscalite() {
                 <input
                   type="number"
                   step="0.1"
-                  className={inputCls + " w-32"}
+                  className={inputClsAuto + " w-32"}
                   value={country.leaveAccrual}
                   onChange={(e) => mutBase((c) => { c.leaveAccrual = Number(e.target.value); })}
                 />
@@ -247,7 +247,7 @@ export default function Fiscalite() {
             <div className="flex flex-wrap gap-4 items-end">
               <Field label="Devise de référence">
                 <input
-                  className={inputCls + " w-28"}
+                  className={inputClsAuto + " w-28"}
                   value={settings.refCurrency}
                   onChange={(e) => setSettingsField((x) => { x.refCurrency = e.target.value.toUpperCase(); })}
                 />
@@ -255,7 +255,7 @@ export default function Fiscalite() {
               {Object.keys(settings.rates).map((cur) => (
                 <Field key={cur} label={`1 ${settings.refCurrency} = ? ${cur}`}>
                   <input
-                    className={inputCls + " w-32"}
+                    className={inputClsAuto + " w-32"}
                     type="number"
                     value={settings.rates[cur]}
                     onChange={(e) => setSettingsField((x) => { x.rates[cur] = Number(e.target.value); })}

@@ -4,7 +4,7 @@ import { Card } from "../../components/ui/Card";
 import { Field } from "../../components/ui/Field";
 import { Btn } from "../../components/ui/Btn";
 import { Badge } from "../../components/ui/Badge";
-import { inputCls, BRAND_DK } from "../../lib/tokens";
+import { inputCls, inputClsAuto, BRAND_DK } from "../../lib/tokens";
 import { fmt } from "../../lib/format";
 import {
   getEmployeePayroll,
@@ -143,7 +143,7 @@ export default function PayTab({ e, s, ct, m, patch, employeeId, onChanged }) {
         </h4>
         <div className="flex flex-wrap items-end gap-2 p-3 rounded-lg bg-slate-50">
           <Field label="Date">
-            <input type="date" className={inputCls + " w-40"} value={ot.date} onChange={(ev) => setOt({ ...ot, date: ev.target.value })} />
+            <input type="date" className={inputClsAuto + " w-40"} value={ot.date} onChange={(ev) => setOt({ ...ot, date: ev.target.value })} />
           </Field>
           <Field label="Méthode">
             <select className={inputCls} value={ot.method} onChange={(ev) => setOt({ ...ot, method: ev.target.value })}>
@@ -154,15 +154,15 @@ export default function PayTab({ e, s, ct, m, patch, employeeId, onChanged }) {
           {ot.method === "hourly" ? (
             <>
               <Field label="Heures">
-                <input type="number" className={inputCls + " w-24"} value={ot.hours} onChange={(ev) => setOt({ ...ot, hours: Number(ev.target.value) })} />
+                <input type="number" className={inputClsAuto + " w-24"} value={ot.hours} onChange={(ev) => setOt({ ...ot, hours: Number(ev.target.value) })} />
               </Field>
               <Field label="Majoration %">
-                <input type="number" className={inputCls + " w-24"} value={ot.rate} onChange={(ev) => setOt({ ...ot, rate: Number(ev.target.value) })} />
+                <input type="number" className={inputClsAuto + " w-24"} value={ot.rate} onChange={(ev) => setOt({ ...ot, rate: Number(ev.target.value) })} />
               </Field>
             </>
           ) : (
             <Field label="Montant">
-              <input type="number" className={inputCls + " w-32"} value={ot.amount} onChange={(ev) => setOt({ ...ot, amount: Number(ev.target.value) })} />
+              <input type="number" className={inputClsAuto + " w-32"} value={ot.amount} onChange={(ev) => setOt({ ...ot, amount: Number(ev.target.value) })} />
             </Field>
           )}
           <Btn variant="outline" onClick={addOt}>
@@ -214,7 +214,7 @@ export default function PayTab({ e, s, ct, m, patch, employeeId, onChanged }) {
               {!v.taxable && <span className="text-[10px] text-slate-400">non imposable</span>}
               <input
                 type="number"
-                className={inputCls + " w-32"}
+                className={inputClsAuto + " w-32"}
                 defaultValue={v.amount}
                 onBlur={(ev) => setPvAmount(v.id, Number(ev.target.value) || 0)}
               />

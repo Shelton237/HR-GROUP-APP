@@ -5,7 +5,7 @@ import { Field } from "../components/ui/Field";
 import { Btn } from "../components/ui/Btn";
 import { Badge } from "../components/ui/Badge";
 import { StringListEditor } from "../components/ui/StringListEditor";
-import { inputCls, uid, BRAND, BRAND_DK } from "../lib/tokens";
+import { inputCls, inputClsAuto, uid, BRAND, BRAND_DK } from "../lib/tokens";
 import { getSettings, updateSettings, getNotifications, updateNotifications } from "../api/settings";
 import { getAlerts } from "../api/dashboard";
 import { getAuditLogs } from "../api/auditLog";
@@ -242,7 +242,7 @@ export default function SettingsView() {
                     type="number"
                     step="0.1"
                     title="jours/mois acquis"
-                    className={inputCls + " w-20"}
+                    className={inputClsAuto + " w-20"}
                     value={t.accrual}
                     onChange={(e) => setS((x) => { x.leaveTypes[i].accrual = Number(e.target.value); })}
                   />
@@ -312,7 +312,7 @@ export default function SettingsView() {
                   value={p.label}
                   onChange={(e) => setS((x) => { x.payElements[i].label = e.target.value; })}
                 />
-                <select className={inputCls + " w-28"} value={p.kind} onChange={(e) => setS((x) => { x.payElements[i].kind = e.target.value; })}>
+                <select className={inputClsAuto + " w-28"} value={p.kind} onChange={(e) => setS((x) => { x.payElements[i].kind = e.target.value; })}>
                   <option value="gain">Gain</option>
                   <option value="retenue">Retenue</option>
                 </select>
@@ -353,7 +353,7 @@ export default function SettingsView() {
               <input
                 type="number"
                 step="0.01"
-                className={inputCls + " w-40"}
+                className={inputClsAuto + " w-40"}
                 value={s.legalMonthlyHours}
                 onChange={(e) => setS((x) => { x.legalMonthlyHours = Number(e.target.value); })}
               />
@@ -375,7 +375,7 @@ export default function SettingsView() {
                   value={c.label}
                   onChange={(e) => setS((x) => { x.customFields[i].label = e.target.value; })}
                 />
-                <select className={inputCls + " w-32"} value={c.type} onChange={(e) => setS((x) => { x.customFields[i].type = e.target.value; })}>
+                <select className={inputClsAuto + " w-32"} value={c.type} onChange={(e) => setS((x) => { x.customFields[i].type = e.target.value; })}>
                   <option value="text">Texte</option>
                   <option value="number">Nombre</option>
                   <option value="date">Date</option>
@@ -461,7 +461,7 @@ export default function SettingsView() {
                 {t.steps.map((st, si) => (
                   <div key={si} className="flex items-center gap-2">
                     <input
-                      className={inputCls + " w-32"}
+                      className={inputClsAuto + " w-32"}
                       value={st.phase}
                       onChange={(e) => setS((x) => { x.onboardingTemplates[ti].steps[si].phase = e.target.value; })}
                     />

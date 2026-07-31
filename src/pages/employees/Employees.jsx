@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Search, Plus, Check, AlertTriangle, UserX, UserCheck, Trash2, Wallet } from "lucide-react";
+import { Search, Plus, Check, AlertTriangle, UserX, UserCheck, Trash2, Wallet, Building2 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Btn } from "../../components/ui/Btn";
 import { Badge } from "../../components/ui/Badge";
-import { inputCls } from "../../lib/tokens";
+import { inputClsAuto } from "../../lib/tokens";
 import { fmt } from "../../lib/format";
 import { listEmployees, updateEmployee, archiveEmployee } from "../../api/employees";
 import { listCompanies } from "../../api/companies";
@@ -90,20 +90,27 @@ export default function Employees({ companyFilter, setCompanyFilter, openEmploye
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
-            className={inputCls + " pl-9 w-64"}
+            className={inputClsAuto + " pl-9 w-64"}
             placeholder="Rechercher…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className={inputCls + " w-56"} value={companyFilter || ""} onChange={(e) => setCompanyFilter(e.target.value || null)}>
-          <option value="">Toutes les sociétés</option>
-          {companies.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <select
+            className={inputClsAuto + " pl-8 w-56"}
+            value={companyFilter || ""}
+            onChange={(e) => setCompanyFilter(e.target.value || null)}
+          >
+            <option value="">Toutes les sociétés</option>
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input type="checkbox" className="accent-[#E31E3D]" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
           Afficher les salariés supprimés
