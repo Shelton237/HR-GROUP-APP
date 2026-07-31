@@ -6,6 +6,7 @@ const modelDefiners = [
   require("./Company"),
   require("./CompanyDocument"),
   require("./User"),
+  require("./AuditLog"),
   require("./Employee"),
   require("./EmergencyContact"),
   require("./EmployeeChecklistItem"),

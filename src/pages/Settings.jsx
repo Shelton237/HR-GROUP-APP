@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ListChecks, Wallet, Pencil, ClipboardCheck, GraduationCap, Bell, Info, Plus, Trash2, Mail } from "lucide-react";
+import { ListChecks, Wallet, Pencil, ClipboardCheck, GraduationCap, Bell, Info, Plus, Trash2, Mail, History } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { Btn } from "../components/ui/Btn";
@@ -8,6 +8,8 @@ import { StringListEditor } from "../components/ui/StringListEditor";
 import { inputCls, uid, BRAND, BRAND_DK } from "../lib/tokens";
 import { getSettings, updateSettings, getNotifications, updateNotifications } from "../api/settings";
 import { getAlerts } from "../api/dashboard";
+import { getAuditLogs } from "../api/auditLog";
+import { useAuth } from "../auth/useAuth";
 
 function SettingCard({ title, children, onDelete }) {
   return (
@@ -56,7 +58,76 @@ function NotifPreview({ notifications }) {
   );
 }
 
+const ACTION_TONE = {
+  LOGIN: "green",
+  LOGIN_FAILED: "rose",
+  CREATE_USER: "blue",
+  UPDATE_USER: "blue",
+  DELETE_USER: "rose",
+  RESET_PASSWORD: "amber",
+  "Changement statut": "amber",
+  Paiement: "green",
+};
+
+function AuditLogTab() {
+  const [logs, setLogs] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getAuditLogs(50)
+      .then((rows) => setLogs(Array.isArray(rows) ? rows : []))
+      .catch((e) => setError(e.message || "Impossible de charger le journal d'audit."));
+  }, []);
+
+  if (error) return <div className="text-sm text-rose-600 py-6 text-center">{error}</div>;
+  if (!logs) return <div className="text-sm text-slate-400 py-6 text-center">Chargement…</div>;
+
+  return (
+    <Card className="p-5">
+      <div className="text-sm text-slate-500 mb-4">{logs.length} entrée{logs.length > 1 ? "s" : ""} dans le journal</div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-slate-400 uppercase border-b border-slate-100">
+              <th className="py-2 pr-4 font-medium">Date / heure</th>
+              <th className="py-2 pr-4 font-medium">Utilisateur</th>
+              <th className="py-2 pr-4 font-medium">Action</th>
+              <th className="py-2 pr-4 font-medium">Entité</th>
+              <th className="py-2 pr-4 font-medium">Détail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.map((l) => (
+              <tr key={l.id} className="border-b border-slate-50">
+                <td className="py-2 pr-4 whitespace-nowrap text-slate-500">
+                  {new Date(l.createdAt).toLocaleString("fr-FR")}
+                </td>
+                <td className="py-2 pr-4 text-slate-800">{l.userName}</td>
+                <td className="py-2 pr-4">
+                  <Badge tone={ACTION_TONE[l.action] || "slate"}>{l.action}</Badge>
+                </td>
+                <td className="py-2 pr-4 text-slate-500">
+                  {l.entityType} #{l.entityId || "—"}
+                </td>
+                <td className="py-2 pr-4 text-slate-600">{l.detail || "—"}</td>
+              </tr>
+            ))}
+            {logs.length === 0 && (
+              <tr>
+                <td colSpan={5} className="py-6 text-center text-slate-400">
+                  Aucune entrée dans le journal.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+
 export default function SettingsView() {
+  const { user } = useAuth();
   const [tab, setTab] = useState("lists");
   const [settings, setSettings] = useState(null);
   const [notifications, setNotifications] = useState(null);
@@ -99,6 +170,7 @@ export default function SettingsView() {
     ["eval", "Grilles d'évaluation", ClipboardCheck],
     ["onboard", "Parcours d'intégration", GraduationCap],
     ["notif", "Notifications & Drive", Bell],
+    ...(user?.role === "Admin" ? [["audit", "Journal d'audit", History]] : []),
     ["data", "Données", Info],
   ];
 
@@ -482,6 +554,8 @@ export default function SettingsView() {
           </SettingCard>
         </div>
       )}
+
+      {tab === "audit" && user?.role === "Admin" && <AuditLogTab />}
 
       {tab === "data" && (
         <SettingCard title="Données de démonstration">

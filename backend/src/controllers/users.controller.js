@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const db = require("../models");
 const { ApiError, asyncHandler } = require("../middlewares/error");
+const { logActionForReq } = require("../services/audit.service");
 
 const uid = (p) => p + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const publicUser = (u) => ({
@@ -37,6 +38,7 @@ const create = asyncHandler(async (req, res) => {
     scope: scope !== undefined ? scope : [],
     active: true,
   });
+  await logActionForReq(req, { action: "CREATE_USER", entityType: "Utilisateurs", entityId: user.id, detail: user.email });
   // Temp password is returned once so the admin creating the account can relay it;
   // it is never stored or logged in plaintext afterwards.
   res.status(201).json({ ...publicUser(user), tempPassword });
@@ -55,6 +57,7 @@ const update = asyncHandler(async (req, res) => {
     ...(active !== undefined && { active: !!active }),
   });
   await user.save();
+  await logActionForReq(req, { action: "UPDATE_USER", entityType: "Utilisateurs", entityId: user.id, detail: user.email });
   res.json(publicUser(user));
 });
 
@@ -62,6 +65,7 @@ const remove = asyncHandler(async (req, res) => {
   const user = await db.User.findByPk(req.params.id);
   if (!user) throw new ApiError(404, "Utilisateur introuvable.");
   await user.destroy();
+  await logActionForReq(req, { action: "DELETE_USER", entityType: "Utilisateurs", entityId: user.id, detail: user.email });
   res.status(204).send();
 });
 
@@ -72,6 +76,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.passwordHash = bcrypt.hashSync(tempPassword, 10);
   user.mustChangePassword = true;
   await user.save();
+  await logActionForReq(req, { action: "RESET_PASSWORD", entityType: "Utilisateurs", entityId: user.id, detail: user.email });
   // Same one-time-return pattern as create(): never stored/logged in plaintext afterwards.
   res.json({ ...publicUser(user), tempPassword });
 });

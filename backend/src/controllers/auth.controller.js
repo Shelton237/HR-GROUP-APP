@@ -2,16 +2,26 @@ const bcrypt = require("bcryptjs");
 const db = require("../models");
 const { signToken } = require("../middlewares/auth");
 const { ApiError, asyncHandler } = require("../middlewares/error");
+const { logAction } = require("../services/audit.service");
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) throw new ApiError(400, "E-mail et mot de passe requis.");
+  const normalizedEmail = String(email).toLowerCase().trim();
 
-  const user = await db.User.findOne({ where: { email: String(email).toLowerCase().trim() } });
-  if (!user || !user.active) throw new ApiError(401, "Identifiants invalides.");
+  const user = await db.User.findOne({ where: { email: normalizedEmail } });
+  if (!user || !user.active) {
+    await logAction({ userName: normalizedEmail, action: "LOGIN_FAILED", entityType: "Auth", detail: "Compte introuvable ou inactif — " + normalizedEmail });
+    throw new ApiError(401, "Identifiants invalides.");
+  }
 
   const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) throw new ApiError(401, "Identifiants invalides.");
+  if (!ok) {
+    await logAction({ userId: user.id, userName: user.name, action: "LOGIN_FAILED", entityType: "Auth", detail: "Mot de passe incorrect — " + normalizedEmail });
+    throw new ApiError(401, "Identifiants invalides.");
+  }
+
+  await logAction({ userId: user.id, userName: user.name, action: "LOGIN", entityType: "Auth", detail: "Connexion réussie — " + normalizedEmail });
 
   const token = signToken(user);
   res.json({

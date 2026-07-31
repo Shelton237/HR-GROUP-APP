@@ -4,6 +4,7 @@ const { ApiError, asyncHandler } = require("../middlewares/error");
 const { hasCompanyScope, scopedCompanyIds } = require("../middlewares/auth");
 const { computePay } = require("../services/payroll.service");
 const { getUnjustifiedAbsenceDays } = require("../services/absenceDeduction.service");
+const { logActionForReq } = require("../services/audit.service");
 
 const uid = (p) => p + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
@@ -150,10 +151,19 @@ const update = asyncHandler(async (req, res) => {
     if (!company) throw new ApiError(400, "Société inconnue.");
     assertScope(req, company.id);
   }
+  const previousStatus = employee.status;
   for (const field of ALLOWED_EMPLOYEE_FIELDS) {
     if (body[field] !== undefined) employee[field] = body[field];
   }
   await employee.save();
+  if (body.status !== undefined && body.status !== previousStatus) {
+    await logActionForReq(req, {
+      action: "Changement statut",
+      entityType: "Salariés",
+      entityId: employee.id,
+      detail: `${employee.firstName} ${employee.lastName} — ${previousStatus} → ${employee.status}`,
+    });
+  }
   res.json(employee);
 });
 

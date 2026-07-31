@@ -3,6 +3,7 @@ const { ApiError, asyncHandler } = require("../middlewares/error");
 const { hasCompanyScope } = require("../middlewares/auth");
 const { computePay } = require("../services/payroll.service");
 const { getUnjustifiedAbsenceDays } = require("../services/absenceDeduction.service");
+const { logActionForReq } = require("../services/audit.service");
 
 // GET /api/payroll/summary?companyId=&month=
 // Mirrors the Payroll view in App.jsx: per-company, per-month payroll table
@@ -75,9 +76,29 @@ const setStatus = asyncHandler(async (req, res) => {
     where: { employeeId, month },
     defaults: { validated: false, paid: false },
   });
+  const wasPaid = payment.paid;
+  const wasValidated = payment.validated;
   if (validated !== undefined) payment.validated = !!validated;
   if (paid !== undefined) payment.paid = !!paid;
   await payment.save();
+
+  const who = `${employee.firstName} ${employee.lastName} — ${month}`;
+  if (paid !== undefined && payment.paid !== wasPaid) {
+    await logActionForReq(req, {
+      action: "Paiement",
+      entityType: "Bulletins",
+      entityId: employeeId,
+      detail: `${who} — ${payment.paid ? "marqué payé" : "paiement annulé"}`,
+    });
+  }
+  if (validated !== undefined && payment.validated !== wasValidated) {
+    await logActionForReq(req, {
+      action: "Changement statut",
+      entityType: "Bulletins",
+      entityId: employeeId,
+      detail: `${who} — ${payment.validated ? "validé" : "validation annulée"}`,
+    });
+  }
   res.json(payment);
 });
 

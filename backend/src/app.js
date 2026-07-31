@@ -16,6 +16,7 @@ const notificationsRoutes = require("./routes/notifications.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const usersRoutes = require("./routes/users.routes");
 const planningRoutes = require("./routes/planning.routes");
+const auditLogsRoutes = require("./routes/auditLogs.routes");
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use("/api/notifications", notificationsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/planning", planningRoutes);
+app.use("/api/audit-logs", auditLogsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
