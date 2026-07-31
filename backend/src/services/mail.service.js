@@ -43,4 +43,23 @@ Thara Services Madagascar`;
   return sendMail(to, "Votre accès au Planning Control Room", text);
 }
 
-module.exports = { sendMail, sendPlanningMail, sendWelcomeAgentMail };
+function sendWelcomeUserMail(to, { name, loginEmail, password, role }) {
+  const loginUrl = process.env.APP_URL || "https://rh.thara-services.mg";
+  const text = `Bonjour ${name},
+
+Un compte vient d'être créé pour vous sur la plateforme Gestion RH Groupe (Thara Services), avec un accès ${role}.
+
+Adresse de connexion : ${loginUrl}
+E-mail : ${loginEmail}
+Mot de passe provisoire : ${password}
+
+Pensez à changer ce mot de passe dès votre première connexion.
+
+Une question ? Contactez votre responsable.
+
+Cordialement,
+Thara Services`;
+  return sendMail(to, "Votre accès à Gestion RH Groupe", text);
+}
+
+module.exports = { sendMail, sendPlanningMail, sendWelcomeAgentMail, sendWelcomeUserMail };

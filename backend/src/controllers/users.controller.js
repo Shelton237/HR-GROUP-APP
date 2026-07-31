@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const db = require("../models");
 const { ApiError, asyncHandler } = require("../middlewares/error");
 const { logActionForReq } = require("../services/audit.service");
+const { sendWelcomeUserMail } = require("../services/mail.service");
 
 const uid = (p) => p + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const publicUser = (u) => ({
@@ -39,9 +40,21 @@ const create = asyncHandler(async (req, res) => {
     active: true,
   });
   await logActionForReq(req, { action: "CREATE_USER", entityType: "Utilisateurs", entityId: user.id, detail: user.email });
+
+  // Best-effort: the admin can always relay the temp password manually
+  // (still returned below either way), so a mail failure must never block
+  // account creation itself.
+  let emailSent = false;
+  try {
+    await sendWelcomeUserMail(user.email, { name: user.name, loginEmail: user.email, password: tempPassword, role: user.role });
+    emailSent = true;
+  } catch {
+    emailSent = false;
+  }
+
   // Temp password is returned once so the admin creating the account can relay it;
   // it is never stored or logged in plaintext afterwards.
-  res.status(201).json({ ...publicUser(user), tempPassword });
+  res.status(201).json({ ...publicUser(user), tempPassword, emailSent });
 });
 
 const update = asyncHandler(async (req, res) => {

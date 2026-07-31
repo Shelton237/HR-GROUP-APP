@@ -101,7 +101,7 @@ export default function Users() {
       } else {
         const created = await createUser(payload);
         closeModal();
-        setRevealPassword({ name: created.name, email: created.email, tempPassword: created.tempPassword });
+        setRevealPassword({ name: created.name, email: created.email, tempPassword: created.tempPassword, emailSent: created.emailSent });
       }
       await reload();
     } catch (e) {
@@ -286,6 +286,13 @@ export default function Users() {
             <div className="bg-slate-50 border border-slate-200 rounded-md p-3">
               <div className="font-mono text-base font-semibold">{revealPassword.tempPassword}</div>
             </div>
+            {revealPassword.emailSent !== undefined && (
+              <Badge tone={revealPassword.emailSent ? "green" : "amber"}>
+                {revealPassword.emailSent
+                  ? "E-mail de bienvenue envoyé à l'utilisateur"
+                  : "Échec de l'envoi automatique — transmettez ce mot de passe vous-même"}
+              </Badge>
+            )}
             <Btn className="w-full" onClick={() => setRevealPassword(null)}>
               Fermer
             </Btn>

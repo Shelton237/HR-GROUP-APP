@@ -11,9 +11,13 @@ export function listUsers() {
 /**
  * POST /users  (Admin only)
  * body: { name, email, role?, scope? }
- * resp: { id, name, email, role, scope, active, mustChangePassword, tempPassword }
+ * resp: { id, name, email, role, scope, active, mustChangePassword, tempPassword, emailSent }
  * tempPassword is returned once — the backend never stores or logs it in
  * plaintext afterwards, so it must be relayed to the new user immediately.
+ * The backend also best-effort e-mails these same credentials to the new
+ * user itself; emailSent reports whether that send succeeded (relay
+ * manually if not — the mail server being briefly down must never block
+ * account creation).
  */
 export function createUser(body) {
   return api.post("/users", body);
