@@ -163,6 +163,7 @@ const update = asyncHandler(async (req, res) => {
       entityId: employee.id,
       detail: `${employee.firstName} ${employee.lastName} — ${previousStatus} → ${employee.status}`,
     });
+    res.locals.auditLogged = true; // avoid a redundant generic "Modification" entry for this same request
   }
   res.json(employee);
 });

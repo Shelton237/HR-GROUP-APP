@@ -3,6 +3,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 
 const { notFound, errorHandler } = require("./middlewares/error");
+const { auditTrail } = require("./middlewares/auditTrail");
 
 const authRoutes = require("./routes/auth.routes");
 const companiesRoutes = require("./routes/companies.routes");
@@ -27,6 +28,8 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
+
+app.use(auditTrail);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/companies", companiesRoutes);

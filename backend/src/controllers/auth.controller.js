@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const db = require("../models");
 const { signToken } = require("../middlewares/auth");
 const { ApiError, asyncHandler } = require("../middlewares/error");
-const { logAction } = require("../services/audit.service");
+const { logAction, logActionForReq } = require("../services/audit.service");
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body || {};
@@ -67,6 +67,7 @@ const changePassword = asyncHandler(async (req, res) => {
   user.passwordHash = await bcrypt.hash(newPassword, 10);
   user.mustChangePassword = false;
   await user.save();
+  await logActionForReq(req, { action: "Modification", entityType: "Auth — Mot de passe", entityId: user.id, detail: user.email });
   res.json({ ok: true });
 });
 
