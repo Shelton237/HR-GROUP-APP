@@ -158,7 +158,7 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
         />
       )}
       {archiveOpen && <ArchiveEmployeeModal employee={e} onClose={() => setArchiveOpen(false)} onConfirm={confirmArchive} />}
-      <div className="flex gap-1 border-b border-slate-200 mb-5 overflow-x-auto">
+      <div className="flex flex-wrap gap-1 border-b border-slate-200 mb-5">
         {tabs.map((t) => (
           <button
             key={t.id}

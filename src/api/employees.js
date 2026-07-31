@@ -228,3 +228,14 @@ export function getEmployeePayroll(id, month) {
 export function getEmployeePayments(id) {
   return api.get(`/employees/${id}/payments`);
 }
+
+/**
+ * POST /employees/:id/payments/regularize  body: { upToMonth? } ("YYYY-MM",
+ * defaults server-side to last month)
+ * Bulk-marks every month from hireDate through upToMonth as validated+paid
+ * in one shot — a historical catch-up for payroll that predates this app,
+ * not a real payment action. resp: { upToMonth, monthsRegularized }
+ */
+export function regularizeEmployeePayments(id, upToMonth) {
+  return api.post(`/employees/${id}/payments/regularize`, { upToMonth });
+}

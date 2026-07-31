@@ -9,6 +9,7 @@ import { fmt } from "../../lib/format";
 import {
   getEmployeePayroll,
   getEmployeePayments,
+  regularizeEmployeePayments,
   listOvertime,
   addOvertime,
   deleteOvertime,
@@ -21,38 +22,76 @@ import {
 // "Historique de paiement" — every month since hireDate (through the exit
 // month if the employee has since left, otherwise through today). A month
 // with no Payment row at all ("jamais traité") is surfaced as unpaid too,
-// not just months explicitly marked paid:false in Payroll.
+// not just months explicitly marked paid:false in Payroll. For employees
+// hired before this app tracked payroll, that backlog is expected — hence
+// "Régulariser l'historique" to catch it up in one shot instead of it
+// sitting there as a permanent false alarm.
 function PaymentHistoryCard({ employeeId }) {
   const [data, setData] = useState(null);
+  const [regularizing, setRegularizing] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  const reload = () => {
+    getEmployeePayments(employeeId)
+      .then(setData)
+      .catch(() => setData({ history: [], unpaidCount: 0, unpaidMonths: [] }));
+  };
+
   useEffect(() => {
-    let cancelled = false;
-    getEmployeePayments(employeeId).then((d) => {
-      if (!cancelled) setData(d);
-    }).catch(() => setData({ history: [], unpaidCount: 0, unpaidMonths: [] }));
-    return () => { cancelled = true; };
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employeeId]);
 
   if (!data) return null;
   const { history, unpaidCount, unpaidMonths } = data;
+  const visibleHistory = showAll ? history : history.slice(0, 6);
+
+  const regularize = async () => {
+    const ok = confirm(
+      "Marquer tous les mois passés (hors mois en cours) comme validés et payés ?\n\n" +
+        "À utiliser uniquement si ce salarié était déjà payé avant la mise en place de cette application — " +
+        "ceci ne déclenche aucun paiement réel, ça régularise seulement l'historique affiché."
+    );
+    if (!ok) return;
+    setRegularizing(true);
+    try {
+      await regularizeEmployeePayments(employeeId);
+      reload();
+    } finally {
+      setRegularizing(false);
+    }
+  };
 
   return (
     <Card className="p-4">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
           <Wallet size={15} />
           Historique de paiement
         </h4>
-        {unpaidCount > 0 ? (
-          <Badge tone="rose">{unpaidCount} mois non payé{unpaidCount > 1 ? "s" : ""}</Badge>
-        ) : (
-          <Badge tone="green">À jour</Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {unpaidCount > 0 ? (
+            <Badge tone="rose">{unpaidCount} mois non payé{unpaidCount > 1 ? "s" : ""}</Badge>
+          ) : (
+            <Badge tone="green">À jour</Badge>
+          )}
+          {unpaidCount > 0 && (
+            <Btn variant="outline" onClick={regularize} disabled={regularizing}>
+              {regularizing ? "Régularisation…" : "Régulariser l'historique"}
+            </Btn>
+          )}
+        </div>
       </div>
       {unpaidCount > 0 && (
-        <p className="text-xs text-rose-600 mb-3">Mois impayés : {unpaidMonths.join(", ")}</p>
+        <p className="text-xs text-rose-600 mb-3">
+          Mois impayés :{" "}
+          {unpaidMonths.length > 6
+            ? `${unpaidMonths[unpaidMonths.length - 1]} → ${unpaidMonths[0]} (${unpaidMonths.length} mois)`
+            : unpaidMonths.join(", ")}
+        </p>
       )}
-      <div className="space-y-1 max-h-56 overflow-y-auto">
-        {history.map((h) => (
+      <div className="space-y-1">
+        {visibleHistory.map((h) => (
           <div key={h.month} className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-slate-100">
             <span className="text-slate-600 w-20 shrink-0">{h.month}</span>
             <Badge tone={h.validated ? "teal" : "slate"}>{h.validated ? "Validé" : "Non validé"}</Badge>
@@ -62,6 +101,15 @@ function PaymentHistoryCard({ employeeId }) {
         ))}
         {history.length === 0 && <div className="text-xs text-slate-400 py-2">Aucun historique disponible.</div>}
       </div>
+      {history.length > 6 && (
+        <button
+          onClick={() => setShowAll((v) => !v)}
+          className="text-xs font-medium mt-2 hover:underline"
+          style={{ color: BRAND_DK }}
+        >
+          {showAll ? "Réduire" : `Voir les ${history.length - 6} mois précédents`}
+        </button>
+      )}
     </Card>
   );
 }

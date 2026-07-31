@@ -218,6 +218,56 @@ const paymentsHistory = asyncHandler(async (req, res) => {
   res.json({ history, unpaidCount: unpaidMonths.length, unpaidMonths });
 });
 
+// POST /api/employees/:id/payments/regularize  body: { upToMonth? }
+// Bulk-marks every month from hireDate through upToMonth (inclusive,
+// defaults to last month) as validated+paid in one shot. This is a
+// historical catch-up for employees whose payroll was tracked outside this
+// app before "Bulletins de paie" existed — it does not represent a real
+// payment, only that the backlog predates this system and shouldn't show as
+// an active alert. The current month is deliberately excluded by default so
+// it stays subject to the normal Payer flow.
+const regularizePayments = asyncHandler(async (req, res) => {
+  const employee = await loadEmployeeOr404(req.params.id);
+  assertScope(req, employee.companyId);
+
+  const now = new Date();
+  const defaultUpTo = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+  const upToMonth = (req.body && req.body.upToMonth) || defaultUpTo;
+
+  const hireDate = employee.hireDate ? new Date(employee.hireDate) : now;
+  const from = new Date(hireDate.getFullYear(), hireDate.getMonth(), 1);
+  const [uy, um] = upToMonth.split("-").map(Number);
+  const to = new Date(uy, um - 1, 1);
+
+  const months = [];
+  for (let cursor = from; cursor <= to; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)) {
+    months.push(monthKey(cursor));
+  }
+
+  let touched = 0;
+  for (const month of months) {
+    const [payment, created] = await db.Payment.findOrCreate({
+      where: { employeeId: employee.id, month },
+      defaults: { validated: true, paid: true },
+    });
+    if (!created && (!payment.validated || !payment.paid)) {
+      payment.validated = true;
+      payment.paid = true;
+      await payment.save();
+    }
+    touched += 1;
+  }
+
+  await logActionForReq(req, {
+    action: "Changement statut",
+    entityType: "Bulletins",
+    entityId: employee.id,
+    detail: `${employee.firstName} ${employee.lastName} — régularisation historique jusqu'à ${upToMonth} (${touched} mois)`,
+  });
+
+  res.json({ upToMonth, monthsRegularized: touched });
+});
+
 const remove = asyncHandler(async (req, res) => {
   const employee = await loadEmployeeOr404(req.params.id);
   assertScope(req, employee.companyId);
@@ -612,4 +662,5 @@ module.exports = {
   removeEmergencyContact,
   payroll,
   paymentsHistory,
+  regularizePayments,
 };

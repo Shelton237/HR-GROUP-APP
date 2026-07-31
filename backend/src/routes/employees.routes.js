@@ -12,6 +12,7 @@ router.delete("/:id", requireRole(), ctrl.remove); // Admin only
 
 router.get("/:id/payroll", ctrl.payroll);
 router.get("/:id/payments", ctrl.paymentsHistory);
+router.post("/:id/payments/regularize", requireRole("RH", "Manager"), ctrl.regularizePayments);
 
 router.get("/:id/checklist", ctrl.listChecklist);
 router.put("/:id/checklist/:key", requireRole("RH", "Manager"), ctrl.setChecklistItem);
