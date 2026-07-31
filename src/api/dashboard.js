@@ -53,6 +53,7 @@ export async function getSummary() {
   return {
     refCurrency: raw.refCurrency,
     activeEmployees: raw.activeHeadcount,
+    usersCount: raw.usersCount,
     companiesCount: byCompany.length,
     countriesCount: byCountry.length,
     costRef: raw.consolidatedCost,

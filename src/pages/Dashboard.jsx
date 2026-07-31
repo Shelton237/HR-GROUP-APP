@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid,
 } from "recharts";
-import { Users, Wallet, Landmark, Bell, ChevronRight, Clock, ClipboardCheck, FileText } from "lucide-react";
+import { Users, UserCog, Wallet, Landmark, Bell, ChevronRight, Clock, ClipboardCheck, FileText } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Kpi } from "../components/ui/Kpi";
@@ -57,13 +57,14 @@ export default function Dashboard({ onGoto }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Kpi
           label="Effectif actif"
           value={summary.activeEmployees}
           icon={Users}
           hint={`${summary.companiesCount} sociétés · ${summary.countriesCount} pays`}
         />
+        <Kpi label="Comptes utilisateurs" value={summary.usersCount} icon={UserCog} hint="tous rôles confondus" />
         <Kpi
           label="Masse salariale brute / mois"
           value={"≈ " + fmt(summary.brutRef, summary.refCurrency)}

@@ -114,6 +114,8 @@ const summary = asyncHandler(async (req, res) => {
     });
   }
 
+  const usersCount = await db.User.count();
+
   const costRef = byCompany.reduce(
     (s, r) => s + toRef(r.cost, r.country?.currency, rates),
     0
@@ -132,6 +134,7 @@ const summary = asyncHandler(async (req, res) => {
     month,
     refCurrency,
     activeHeadcount: activeCount,
+    usersCount,
     consolidatedBrut: brutRef,
     consolidatedCost: costRef,
     byCompany,
