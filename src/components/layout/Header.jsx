@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LogOut, Bell, Clock, ClipboardCheck, FileText, ChevronRight } from "lucide-react";
+import { LogOut, Bell, Clock, ClipboardCheck, FileText, ChevronRight, Wallet } from "lucide-react";
 import { fmt } from "../../lib/format";
 import { getSummary, getAlerts } from "../../api/dashboard";
 import { NAV } from "../../lib/nav";
@@ -39,8 +39,8 @@ function ConsolidatedPill({ refreshKey }) {
   );
 }
 
-const ALERT_ICON = { essai: Clock, eval: ClipboardCheck, doc: FileText };
-const ALERT_LABEL = { essai: "Essai", eval: "Évaluation", doc: "Document", contrat: "Contrat", dossier: "Dossier" };
+const ALERT_ICON = { essai: Clock, eval: ClipboardCheck, doc: FileText, salaire: Wallet };
+const ALERT_LABEL = { essai: "Essai", eval: "Évaluation", doc: "Document", contrat: "Contrat", dossier: "Dossier", salaire: "Salaire" };
 
 function NotificationBell({ view, onGoto }) {
   const { user } = useAuth();

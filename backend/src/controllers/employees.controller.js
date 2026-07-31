@@ -157,6 +157,38 @@ const update = asyncHandler(async (req, res) => {
     if (!company) throw new ApiError(400, "Société inconnue.");
     assertScope(req, company.id);
   }
+
+  // An Operateur can't change salary directly — mistakes there need Admin
+  // sign-off. Instead of applying salaryBrut, park it as a pending request
+  // and let every other field in the same PUT go through normally.
+  let salaryRequestPending = false;
+  if (req.user.role === "Operateur" && body.salaryBrut !== undefined && Number(body.salaryBrut) !== employee.salaryBrut) {
+    const existingPending = await db.SalaryChangeRequest.findOne({
+      where: { employeeId: employee.id, status: "En attente" },
+    });
+    if (existingPending) {
+      throw new ApiError(409, "Une demande de modification de salaire est déjà en attente de validation pour ce salarié.");
+    }
+    await db.SalaryChangeRequest.create({
+      id: uid("scr"),
+      employeeId: employee.id,
+      requestedBy: req.user.id,
+      requestedByName: req.user.name,
+      previousSalary: employee.salaryBrut,
+      requestedSalary: Number(body.salaryBrut),
+      status: "En attente",
+    });
+    await logActionForReq(req, {
+      action: "Demande",
+      entityType: "Salariés — Salaire",
+      entityId: employee.id,
+      detail: `${employee.firstName} ${employee.lastName} — ${employee.salaryBrut} → ${Number(body.salaryBrut)} (en attente de validation)`,
+    });
+    res.locals.auditLogged = true;
+    salaryRequestPending = true;
+    delete body.salaryBrut;
+  }
+
   const previousStatus = employee.status;
   for (const field of ALLOWED_EMPLOYEE_FIELDS) {
     if (body[field] !== undefined) employee[field] = body[field];
@@ -171,7 +203,7 @@ const update = asyncHandler(async (req, res) => {
     });
     res.locals.auditLogged = true; // avoid a redundant generic "Modification" entry for this same request
   }
-  res.json(employee);
+  res.json({ ...employee.toJSON(), salaryRequestPending });
 });
 
 // "YYYY-MM" from a Date's LOCAL calendar fields — never .toISOString() here:
@@ -266,6 +298,67 @@ const regularizePayments = asyncHandler(async (req, res) => {
   });
 
   res.json({ upToMonth, monthsRegularized: touched });
+});
+
+// GET /api/employees/:id/salary-requests
+const listSalaryRequests = asyncHandler(async (req, res) => {
+  const employee = await loadEmployeeOr404(req.params.id);
+  assertScope(req, employee.companyId);
+  const requests = await db.SalaryChangeRequest.findAll({
+    where: { employeeId: employee.id },
+    order: [["createdAt", "DESC"]],
+  });
+  res.json(requests);
+});
+
+// POST /api/employees/:id/salary-requests/:requestId/approve — Admin only
+const approveSalaryRequest = asyncHandler(async (req, res) => {
+  const employee = await loadEmployeeOr404(req.params.id);
+  assertScope(req, employee.companyId);
+  const request = await db.SalaryChangeRequest.findOne({ where: { id: req.params.requestId, employeeId: employee.id } });
+  if (!request) throw new ApiError(404, "Demande introuvable.");
+  if (request.status !== "En attente") throw new ApiError(409, "Cette demande a déjà été traitée.");
+
+  employee.salaryBrut = request.requestedSalary;
+  await employee.save();
+  request.status = "Validé";
+  request.reviewedBy = req.user.id;
+  request.reviewedAt = new Date();
+  await request.save();
+
+  await logActionForReq(req, {
+    action: "Validation",
+    entityType: "Salariés — Salaire",
+    entityId: employee.id,
+    detail: `${employee.firstName} ${employee.lastName} — ${request.previousSalary} → ${request.requestedSalary} (validé, demandé par ${request.requestedByName})`,
+  });
+  res.locals.auditLogged = true;
+
+  res.json({ employee, request });
+});
+
+// POST /api/employees/:id/salary-requests/:requestId/reject — Admin only
+const rejectSalaryRequest = asyncHandler(async (req, res) => {
+  const employee = await loadEmployeeOr404(req.params.id);
+  assertScope(req, employee.companyId);
+  const request = await db.SalaryChangeRequest.findOne({ where: { id: req.params.requestId, employeeId: employee.id } });
+  if (!request) throw new ApiError(404, "Demande introuvable.");
+  if (request.status !== "En attente") throw new ApiError(409, "Cette demande a déjà été traitée.");
+
+  request.status = "Refusé";
+  request.reviewedBy = req.user.id;
+  request.reviewedAt = new Date();
+  await request.save();
+
+  await logActionForReq(req, {
+    action: "Refus",
+    entityType: "Salariés — Salaire",
+    entityId: employee.id,
+    detail: `${employee.firstName} ${employee.lastName} — ${request.previousSalary} → ${request.requestedSalary} (refusé, demandé par ${request.requestedByName})`,
+  });
+  res.locals.auditLogged = true;
+
+  res.json({ request });
 });
 
 const remove = asyncHandler(async (req, res) => {
@@ -663,4 +756,7 @@ module.exports = {
   payroll,
   paymentsHistory,
   regularizePayments,
+  listSalaryRequests,
+  approveSalaryRequest,
+  rejectSalaryRequest,
 };

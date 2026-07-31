@@ -18,6 +18,7 @@ const modelDefiners = [
   require("./EmployeePayVar"),
   require("./Leave"),
   require("./Payment"),
+  require("./SalaryChangeRequest"),
   require("./Settings"),
   require("./Notifications"),
   require("./PlanningRoom"),

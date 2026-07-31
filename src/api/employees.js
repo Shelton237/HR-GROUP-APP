@@ -239,3 +239,23 @@ export function getEmployeePayments(id) {
 export function regularizeEmployeePayments(id, upToMonth) {
   return api.post(`/employees/${id}/payments/regularize`, { upToMonth });
 }
+
+/* ---- Demandes de modification de salaire (Operateur → validation Admin) ---- */
+/**
+ * GET /employees/:id/salary-requests
+ * resp: Array<{ id, employeeId, requestedBy, requestedByName, previousSalary,
+ *   requestedSalary, status: "En attente"|"Validé"|"Refusé", reviewedBy, reviewedAt, createdAt }>
+ */
+export function listSalaryRequests(id) {
+  return api.get(`/employees/${id}/salary-requests`);
+}
+
+/** POST /employees/:id/salary-requests/:requestId/approve  (Admin only) — applies requestedSalary to the employee. */
+export function approveSalaryRequest(id, requestId) {
+  return api.post(`/employees/${id}/salary-requests/${requestId}/approve`);
+}
+
+/** POST /employees/:id/salary-requests/:requestId/reject  (Admin only) — leaves the employee's salary unchanged. */
+export function rejectSalaryRequest(id, requestId) {
+  return api.post(`/employees/${id}/salary-requests/${requestId}/reject`);
+}

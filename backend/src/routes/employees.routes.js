@@ -14,6 +14,10 @@ router.get("/:id/payroll", ctrl.payroll);
 router.get("/:id/payments", ctrl.paymentsHistory);
 router.post("/:id/payments/regularize", requireRole("RH", "Manager"), ctrl.regularizePayments);
 
+router.get("/:id/salary-requests", ctrl.listSalaryRequests);
+router.post("/:id/salary-requests/:requestId/approve", requireRole(), ctrl.approveSalaryRequest); // Admin only
+router.post("/:id/salary-requests/:requestId/reject", requireRole(), ctrl.rejectSalaryRequest); // Admin only
+
 router.get("/:id/checklist", ctrl.listChecklist);
 router.put("/:id/checklist/:key", requireRole("RH", "Manager"), ctrl.setChecklistItem);
 

@@ -196,6 +196,8 @@ export default function Dashboard({ onGoto }) {
                     <ClipboardCheck size={16} style={{ color: a.tone === "rose" ? ROSE : BRAND }} />
                   ) : a.type === "doc" ? (
                     <FileText size={16} style={{ color: a.tone === "rose" ? ROSE : AMBER }} />
+                  ) : a.type === "salaire" ? (
+                    <Wallet size={16} style={{ color: ROSE }} />
                   ) : (
                     <FileText size={16} style={{ color: AMBER }} />
                   )}
@@ -207,7 +209,17 @@ export default function Dashboard({ onGoto }) {
                   <div className="text-xs text-slate-500">{a.text}</div>
                 </div>
                 <Badge tone={a.tone}>
-                  {a.type === "essai" ? "Essai" : a.type === "eval" ? "Évaluation" : a.type === "doc" ? "Document" : a.type === "contrat" ? "Contrat" : "Dossier"}
+                  {a.type === "essai"
+                    ? "Essai"
+                    : a.type === "eval"
+                    ? "Évaluation"
+                    : a.type === "doc"
+                    ? "Document"
+                    : a.type === "contrat"
+                    ? "Contrat"
+                    : a.type === "salaire"
+                    ? "Salaire"
+                    : "Dossier"}
                 </Badge>
                 <ChevronRight size={16} className="shrink-0 text-slate-300" />
               </button>

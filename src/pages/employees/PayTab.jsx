@@ -6,10 +6,15 @@ import { Btn } from "../../components/ui/Btn";
 import { Badge } from "../../components/ui/Badge";
 import { inputCls, inputClsAuto, BRAND_DK } from "../../lib/tokens";
 import { fmt } from "../../lib/format";
+import { useAuth } from "../../auth/useAuth";
 import {
   getEmployeePayroll,
   getEmployeePayments,
   regularizeEmployeePayments,
+  updateEmployee,
+  listSalaryRequests,
+  approveSalaryRequest,
+  rejectSalaryRequest,
   listOvertime,
   addOvertime,
   deleteOvertime,
@@ -114,6 +119,123 @@ function PaymentHistoryCard({ employeeId }) {
   );
 }
 
+// An Operateur can't change salary directly (mistakes there need Admin
+// sign-off) — the backend already enforces this by parking the change as a
+// pending SalaryChangeRequest instead of applying it, but the UI must not
+// pretend it applied instantly either, or it repeats the exact "looks saved
+// but isn't" trap the Paramètres page had. So Operateur gets an explicit
+// "Proposer une modification" flow instead of a live-editable field, and the
+// employee's displayed salary is only ever what the backend actually
+// returns — never optimistically bumped to the proposed value.
+function SalaryField({ e, employeeId, patch, currency, userRole, onChanged }) {
+  const [requests, setRequests] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [proposed, setProposed] = useState(e.salaryBrut);
+  const [submitting, setSubmitting] = useState(false);
+
+  const reload = () => listSalaryRequests(employeeId).then((r) => setRequests(r || []));
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employeeId]);
+
+  const pending = (requests || []).find((r) => r.status === "En attente");
+  const isOperateur = userRole === "Operateur";
+  const isAdmin = userRole === "Admin";
+
+  const submitRequest = async () => {
+    setSubmitting(true);
+    try {
+      await updateEmployee(employeeId, { salaryBrut: Number(proposed) || 0 });
+      setShowForm(false);
+      await reload();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const decide = async (approve) => {
+    setSubmitting(true);
+    try {
+      if (approve) await approveSalaryRequest(employeeId, pending.id);
+      else await rejectSalaryRequest(employeeId, pending.id);
+      await reload();
+      onChanged?.();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Field label="Salaire brut mensuel de base">
+        {isOperateur ? (
+          <div className={inputCls + " bg-slate-50 text-slate-700"}>{fmt(e.salaryBrut, currency)}</div>
+        ) : (
+          <input
+            type="number"
+            className={inputCls}
+            value={e.salaryBrut}
+            onChange={(ev) => patch({ salaryBrut: Number(ev.target.value) || 0 })}
+          />
+        )}
+      </Field>
+
+      {isOperateur && !pending && (
+        <button
+          onClick={() => {
+            setShowForm((v) => !v);
+            setProposed(e.salaryBrut);
+          }}
+          className="text-xs font-medium hover:underline"
+          style={{ color: BRAND_DK }}
+        >
+          {showForm ? "Annuler" : "Proposer une modification"}
+        </button>
+      )}
+      {isOperateur && showForm && !pending && (
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50">
+          <input
+            type="number"
+            className={inputClsAuto + " w-40"}
+            value={proposed}
+            onChange={(ev) => setProposed(ev.target.value)}
+          />
+          <Btn variant="outline" onClick={submitRequest} disabled={submitting}>
+            {submitting ? "Envoi…" : "Soumettre pour validation"}
+          </Btn>
+        </div>
+      )}
+
+      {pending && (
+        <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <Badge tone="amber">En attente de validation</Badge>
+            <span className="text-slate-700">
+              {fmt(pending.previousSalary, currency)} → {fmt(pending.requestedSalary, currency)}
+            </span>
+          </div>
+          <div className="text-xs text-slate-500 mb-2">
+            Demandé par {pending.requestedByName} le {new Date(pending.createdAt).toLocaleDateString("fr-FR")}
+          </div>
+          {isAdmin ? (
+            <div className="flex gap-2">
+              <Btn onClick={() => decide(true)} disabled={submitting}>
+                Valider
+              </Btn>
+              <Btn variant="outline" onClick={() => decide(false)} disabled={submitting}>
+                Refuser
+              </Btn>
+            </div>
+          ) : (
+            <div className="text-xs text-slate-400">Seul un administrateur peut valider cette demande.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const PayLine = ({ label, value, strong, cost }) => (
   <div className="flex items-center justify-between py-1">
     <span className={"text-sm " + (strong || cost ? "font-semibold text-slate-900" : "text-slate-600")}>{label}</span>
@@ -129,6 +251,7 @@ const overtimeLineAmount = (o, salaryBrut, legalHours) =>
   o.method === "forfait" ? o.amount || 0 : (o.hours || 0) * (salaryBrut / (legalHours || 173.33)) * (1 + (o.rate || 0) / 100);
 
 export default function PayTab({ e, s, ct, m, patch, employeeId, onChanged }) {
+  const { user } = useAuth();
   const [pay, setPay] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -176,9 +299,7 @@ export default function PayTab({ e, s, ct, m, patch, employeeId, onChanged }) {
       <PaymentHistoryCard employeeId={employeeId} />
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Salaire brut mensuel de base">
-          <input type="number" className={inputCls} value={e.salaryBrut} onChange={(ev) => patch({ salaryBrut: Number(ev.target.value) || 0 })} />
-        </Field>
+        <SalaryField e={e} employeeId={employeeId} patch={patch} currency={ct?.currency} userRole={user?.role} onChanged={onChanged} />
         <div className="text-xs text-slate-500 self-end pb-2">
           Devise : {ct?.currency} · Mois : {m}
         </div>

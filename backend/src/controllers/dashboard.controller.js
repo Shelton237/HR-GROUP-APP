@@ -53,7 +53,31 @@ async function buildAlertsData(companies, countries) {
 const alerts = asyncHandler(async (req, res) => {
   const { companies, countries } = await loadScopedCompaniesAndCountries(req);
   const { data, companyById } = await buildAlertsData(companies, countries);
-  res.json(computeAlerts(data, companyById));
+  const out = computeAlerts(data, companyById);
+
+  // Pending Operateur-submitted salary changes are Admin-actionable, not a
+  // general HR alert — only Admin sees them here, and only Admin's approve/
+  // reject routes can act on them anyway.
+  if (req.user.role === "Admin") {
+    const companyIds = companies.map((c) => c.id);
+    const pending = await db.SalaryChangeRequest.findAll({
+      where: { status: "En attente" },
+      include: [{ model: db.Employee, where: { companyId: { [Op.in]: companyIds.length ? companyIds : ["__none__"] } } }],
+    });
+    for (const r of pending) {
+      const comp = companyById(r.Employee.companyId);
+      out.push({
+        type: "salaire",
+        tone: "rose",
+        employeeId: r.employeeId,
+        who: `${r.Employee.firstName} ${r.Employee.lastName}`,
+        company: comp?.name,
+        text: `Demande de modification de salaire (${r.previousSalary} → ${r.requestedSalary}) par ${r.requestedByName}`,
+      });
+    }
+  }
+
+  res.json(out);
 });
 
 // GET /api/dashboard/summary
