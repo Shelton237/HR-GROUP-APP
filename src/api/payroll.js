@@ -26,3 +26,28 @@ export function getPayrollSummary({ companyId, month } = {}) {
 export function setPaymentStatus(employeeId, month, patch) {
   return api.put(`/payments/${employeeId}/${month}`, patch);
 }
+
+/**
+ * GET /payroll/bulletins?month=
+ * resp: {
+ *   month, bulletins: Array<{
+ *     employeeId, employeeName, companyId, companyName, countryFlag, currency,
+ *     contractType, joursTravailles, joursTotal, net, validated, paid, exists
+ *   }>
+ * }
+ * Cross-company individual payslip list ("Bulletins de paie" tab) — every
+ * active employee in scope for the month, regardless of company.
+ */
+export function getBulletins(month) {
+  return api.get("/payroll/bulletins", { month });
+}
+
+/**
+ * POST /payroll/bulletins/generate  body: { month }
+ * Bulk-creates the payment row (validated:false, paid:false) for every active
+ * employee in scope who doesn't have one yet for that month.
+ * resp: { month, total, created }
+ */
+export function generateBulletinsForPeriod(month) {
+  return api.post("/payroll/bulletins/generate", { month });
+}

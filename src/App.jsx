@@ -86,7 +86,7 @@ export default function App() {
               onOpenedEmployee={() => setOpenEmployeeId(null)}
             />
           )}
-          {view === "payroll" && <Payroll />}
+          {view === "payroll" && <Payroll onGoto={goto} />}
           {view === "leaves" && <Leaves />}
           {view === "planning" && <Planning />}
           {view === "fiscalite" && <Fiscalite />}
