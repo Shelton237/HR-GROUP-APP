@@ -82,7 +82,12 @@ export default function Employees({ companyFilter, setCompanyFilter, openEmploye
     return !q || `${e.firstName} ${e.lastName} ${e.poste}`.toLowerCase().includes(q);
   });
 
-  if (loading || !settings) return <div className="text-sm text-slate-400 py-10 text-center">Chargement…</div>;
+  // Only gate on the very first load: any subsequent load() call (e.g. the
+  // onChanged→refresh chain from an open employee profile — accepting a
+  // leave, adding a warning, etc.) must not unmount this whole page, or the
+  // profile modal it's currently showing would unmount with it and lose its
+  // selected tab.
+  if (!settings) return <div className="text-sm text-slate-400 py-10 text-center">Chargement…</div>;
 
   return (
     <div className="space-y-4">

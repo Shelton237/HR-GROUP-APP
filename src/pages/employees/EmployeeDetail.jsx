@@ -14,6 +14,7 @@ import OnboardTab from "./OnboardTab";
 import EvalTab from "./EvalTab";
 import WarnTab from "./WarnTab";
 import PayTab from "./PayTab";
+import LeavesTab from "./LeavesTab";
 
 export default function EmployeeDetail({ employeeId, settings: s, countryOf, companyById, onClose, onChanged }) {
   const [employee, setEmployee] = useState(null);
@@ -72,6 +73,7 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
     { id: "onboard", label: "Intégration" },
     { id: "eval", label: "Évaluations" },
     { id: "warn", label: "Avertissements" },
+    { id: "leaves", label: "Congés" },
     { id: "docs", label: "Archivage" },
     { id: "pay", label: "Rémunération" },
   ];
@@ -219,6 +221,7 @@ export default function EmployeeDetail({ employeeId, settings: s, countryOf, com
       {tab === "onboard" && <OnboardTab e={e} s={s} employeeId={e.id} onChanged={refresh} />}
       {tab === "eval" && <EvalTab e={e} s={s} employeeId={e.id} onChanged={refresh} />}
       {tab === "warn" && <WarnTab e={e} s={s} employeeId={e.id} onChanged={refresh} />}
+      {tab === "leaves" && <LeavesTab e={e} employeeId={e.id} onChanged={refresh} />}
       {tab === "docs" && (
         <DocList
           items={e.documents || []}
