@@ -67,7 +67,7 @@ export default function App() {
         })}
       />
       <main className="flex-1 min-w-0 flex flex-col">
-        <Header view={view} />
+        <Header view={view} onGoto={goto} />
         <div className="flex-1 overflow-y-auto p-6">
           {view === "dashboard" && <Dashboard onGoto={goto} />}
           {view === "companies" && (
