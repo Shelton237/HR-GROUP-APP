@@ -182,7 +182,12 @@ export default function Dashboard({ onGoto }) {
         ) : (
           <div className="space-y-2">
             {alerts.map((a, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 bg-slate-50/60">
+              <button
+                key={i}
+                type="button"
+                onClick={() => a.employeeId && onGoto("employees", undefined, a.employeeId)}
+                className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-100 bg-slate-50/60 text-left hover:border-[#E31E3D] hover:bg-white transition"
+              >
                 <span className="shrink-0">
                   {a.type === "essai" ? (
                     <Clock size={16} style={{ color: a.tone === "rose" ? ROSE : AMBER }} />
@@ -203,7 +208,8 @@ export default function Dashboard({ onGoto }) {
                 <Badge tone={a.tone}>
                   {a.type === "essai" ? "Essai" : a.type === "eval" ? "Évaluation" : a.type === "doc" ? "Document" : a.type === "contrat" ? "Contrat" : "Dossier"}
                 </Badge>
-              </div>
+                <ChevronRight size={16} className="shrink-0 text-slate-300" />
+              </button>
             ))}
           </div>
         )}

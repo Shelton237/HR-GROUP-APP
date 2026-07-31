@@ -23,6 +23,7 @@ function computeAlerts(data, companyById) {
           out.push({
             type: "essai",
             tone: d < 0 ? "rose" : "amber",
+            employeeId: e.id,
             who,
             company: comp?.name,
             text:
@@ -44,6 +45,7 @@ function computeAlerts(data, companyById) {
           out.push({
             type: "eval",
             tone: d < 0 ? "rose" : "teal",
+            employeeId: e.id,
             who,
             company: comp?.name,
             text: d < 0 ? `Évaluation en retard de ${-d} j` : `Évaluation à réaliser dans ${d} j`,
@@ -58,6 +60,7 @@ function computeAlerts(data, companyById) {
         out.push({
           type: "dossier",
           tone: "amber",
+          employeeId: e.id,
           who,
           company: comp?.name,
           text: `Dossier incomplet : ${missing.map((m) => m.label).join(", ")}`,
@@ -70,6 +73,7 @@ function computeAlerts(data, companyById) {
           out.push({
             type: "contrat",
             tone: "amber",
+            employeeId: e.id,
             who,
             company: comp?.name,
             text: `Fin de CDD dans ${d} j`,
@@ -84,6 +88,7 @@ function computeAlerts(data, companyById) {
             out.push({
               type: "doc",
               tone: d < 0 ? "rose" : "amber",
+              employeeId: e.id,
               who,
               company: comp?.name,
               text: d < 0 ? `${doc.name} expiré` : `${doc.name} expire dans ${d} j`,

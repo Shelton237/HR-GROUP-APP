@@ -14,7 +14,7 @@ import { ArchiveEmployeeModal } from "../../components/ArchiveEmployeeModal";
 import EmployeeDetail from "./EmployeeDetail";
 import AddEmployee from "./AddEmployee";
 
-export default function Employees({ companyFilter, setCompanyFilter }) {
+export default function Employees({ companyFilter, setCompanyFilter, openEmployeeId, onOpenedEmployee }) {
   const [employees, setEmployees] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [countries, setCountries] = useState([]);
@@ -43,6 +43,15 @@ export default function Employees({ companyFilter, setCompanyFilter }) {
     load(showArchived);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showArchived]);
+
+  // Deep-link from elsewhere (e.g. clicking a Dashboard alert) — open that
+  // employee's fiche directly, then clear the request so it doesn't reopen.
+  useEffect(() => {
+    if (!openEmployeeId) return;
+    setDetail(openEmployeeId);
+    onOpenedEmployee?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openEmployeeId]);
 
   const companyById = (id) => companies.find((c) => c.id === id);
   const countryOf = (code) => countries.find((c) => c.code === code);

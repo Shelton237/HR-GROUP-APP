@@ -19,6 +19,7 @@ export default function App() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [view, setView] = useState("dashboard");
   const [companyFilter, setCompanyFilter] = useState(null);
+  const [openEmployeeId, setOpenEmployeeId] = useState(null);
 
   // "Operateur" has no Dashboard (consolidated multi-company view) and no
   // Planning module at all, and Utilisateurs is Admin-only (matches the
@@ -43,10 +44,12 @@ export default function App() {
   const navigate = (id) => {
     setView(id);
     setCompanyFilter(null);
+    setOpenEmployeeId(null);
   };
-  const goto = (id, cf) => {
+  const goto = (id, cf, employeeId) => {
     setView(id);
     if (cf !== undefined) setCompanyFilter(cf);
+    if (employeeId !== undefined) setOpenEmployeeId(employeeId);
   };
 
   return (
@@ -75,7 +78,14 @@ export default function App() {
               }}
             />
           )}
-          {view === "employees" && <Employees companyFilter={companyFilter} setCompanyFilter={setCompanyFilter} />}
+          {view === "employees" && (
+            <Employees
+              companyFilter={companyFilter}
+              setCompanyFilter={setCompanyFilter}
+              openEmployeeId={openEmployeeId}
+              onOpenedEmployee={() => setOpenEmployeeId(null)}
+            />
+          )}
           {view === "payroll" && <Payroll />}
           {view === "leaves" && <Leaves />}
           {view === "planning" && <Planning />}

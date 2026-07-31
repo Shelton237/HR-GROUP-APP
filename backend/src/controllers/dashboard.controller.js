@@ -30,6 +30,7 @@ async function buildAlertsData(companies, countries) {
   });
 
   const employeeShapes = employees.map((e) => ({
+    id: e.id,
     firstName: e.firstName,
     lastName: e.lastName,
     companyId: e.companyId,
