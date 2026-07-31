@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Wallet, Landmark, Building2, Info, Zap, Plus, Search, Filter, CalendarDays } from "lucide-react";
+import { Check, Wallet, Landmark, Building2, Info, Zap, Plus, Search, Filter, CalendarDays, Globe } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Kpi } from "../components/ui/Kpi";
 import { Btn } from "../components/ui/Btn";
@@ -9,6 +9,7 @@ import { Field } from "../components/ui/Field";
 import { inputCls, inputClsAuto, BRAND_DK, BRAND_WASH, BRAND, AMBER } from "../lib/tokens";
 import { fmt, monthNow } from "../lib/format";
 import { listCompanies } from "../api/companies";
+import { listCountries } from "../api/countries";
 import { listEmployees } from "../api/employees";
 import { getPayrollSummary, setPaymentStatus, getBulletins, generateBulletinsForPeriod } from "../api/payroll";
 
@@ -263,14 +264,31 @@ function BulletinsTab({ onGoto }) {
   const [month, setMonth] = useState(monthNow());
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("");
+  const [countryFilter, setCountryFilter] = useState("");
+  const [companies, setCompanies] = useState([]);
+  const [countries, setCountries] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
 
+  // Both already scoped server-side (GET /companies restricts to the
+  // caller's own scope) — an Operateur limited to Madagascar simply never
+  // receives Cameroon in either list, so these filter dropdowns can never
+  // offer a way out of their perimeter.
+  useEffect(() => {
+    listCompanies().then((list) => setCompanies(list || []));
+    listCountries().then((list) => setCountries(list || []));
+  }, []);
+
+  const scopedCountryCodes = new Set(companies.map((c) => c.countryCode));
+  const countryOptions = countries.filter((c) => scopedCountryCodes.has(c.code));
+  const companyOptions = countryFilter ? companies.filter((c) => c.countryCode === countryFilter) : companies;
+
   const load = () => {
     setLoading(true);
-    getBulletins(month)
+    getBulletins(month, { companyId: companyFilter || undefined, countryCode: countryFilter || undefined })
       .then(setData)
       .finally(() => setLoading(false));
   };
@@ -278,7 +296,7 @@ function BulletinsTab({ onGoto }) {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [month]);
+  }, [month, companyFilter, countryFilter]);
 
   const bulletins = data?.bulletins || [];
   const filtered = bulletins.filter((b) => {
@@ -338,6 +356,38 @@ function BulletinsTab({ onGoto }) {
             <option value="all">Tous statuts</option>
             <option value="paid">Payée</option>
             <option value="unpaid">À payer</option>
+          </select>
+        </div>
+        <div className="relative">
+          <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <select
+            className={inputClsAuto + " pl-8 w-44"}
+            value={countryFilter}
+            onChange={(e) => {
+              const code = e.target.value;
+              setCountryFilter(code);
+              // Drop a company selection that no longer belongs to the chosen country.
+              const stillValid = !companyFilter || companies.find((c) => c.id === companyFilter)?.countryCode === code || !code;
+              if (!stillValid) setCompanyFilter("");
+            }}
+          >
+            <option value="">Tous les pays</option>
+            {countryOptions.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="relative">
+          <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <select className={inputClsAuto + " pl-8 w-48"} value={companyFilter} onChange={(e) => setCompanyFilter(e.target.value)}>
+            <option value="">Toutes les sociétés</option>
+            {companyOptions.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
         </div>
         <div className="relative">

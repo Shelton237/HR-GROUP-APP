@@ -28,18 +28,22 @@ export function setPaymentStatus(employeeId, month, patch) {
 }
 
 /**
- * GET /payroll/bulletins?month=
+ * GET /payroll/bulletins?month=&companyId=&countryCode=
  * resp: {
  *   month, bulletins: Array<{
- *     employeeId, employeeName, companyId, companyName, countryFlag, currency,
- *     contractType, joursTravailles, joursTotal, net, validated, paid, exists
+ *     employeeId, employeeName, companyId, companyName, countryCode, countryName,
+ *     countryFlag, currency, contractType, joursTravailles, joursTotal, net,
+ *     validated, paid, exists
  *   }>
  * }
  * Cross-company individual payslip list ("Bulletins de paie" tab) — every
- * active employee in scope for the month, regardless of company.
+ * active employee in scope for the month, regardless of company. companyId/
+ * countryCode only ever narrow the caller's own scope server-side (an
+ * Operateur limited to Madagascar can't widen the result by passing a
+ * Cameroon countryCode — it just yields zero rows).
  */
-export function getBulletins(month) {
-  return api.get("/payroll/bulletins", { month });
+export function getBulletins(month, { companyId, countryCode } = {}) {
+  return api.get("/payroll/bulletins", { month, companyId, countryCode });
 }
 
 /**

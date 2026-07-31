@@ -118,7 +118,12 @@ const setStatus = asyncHandler(async (req, res) => {
 const bulletins = asyncHandler(async (req, res) => {
   const month = req.query.month || new Date().toISOString().slice(0, 7);
   const allowed = scopedCompanyIds(req.user);
-  const companies = await db.Company.findAll({ where: allowed ? { id: { [Op.in]: allowed } } : {} });
+  let companies = await db.Company.findAll({ where: allowed ? { id: { [Op.in]: allowed } } : {} });
+  // Filters only ever narrow the already-scoped company list above — an
+  // Operateur limited to Madagascar companies can pass ?countryCode=CM all
+  // they want, it will just yield zero rows, never a leak outside scope.
+  if (req.query.companyId) companies = companies.filter((c) => c.id === req.query.companyId);
+  if (req.query.countryCode) companies = companies.filter((c) => c.countryCode === req.query.countryCode);
   const countries = await db.Country.findAll();
   const countryByCode = Object.fromEntries(countries.map((c) => [c.code, c]));
   const settings = await db.Settings.findByPk(1);
@@ -154,6 +159,8 @@ const bulletins = asyncHandler(async (req, res) => {
         employeeName: `${e.firstName} ${e.lastName}`,
         companyId: comp.id,
         companyName: comp.name,
+        countryCode: comp.countryCode,
+        countryName: country?.name || comp.countryCode,
         countryFlag: country?.flag || "",
         currency: country?.currency || "",
         contractType: e.contractType,
