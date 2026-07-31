@@ -13,6 +13,7 @@ export default function AddEmployee({ companies, settings: s, onClose, onCreated
     companyId: defaultCompany || companies[0]?.id,
     contractType: "Période d'essai",
     hireDate: new Date().toISOString().slice(0, 10),
+    contractEndDate: "",
     salaryBrut: 0,
     probationMonths: 3,
     department: "",
@@ -62,7 +63,14 @@ export default function AddEmployee({ companies, settings: s, onClose, onCreated
           <select
             className={inputCls}
             value={f.contractType}
-            onChange={(e) => setF({ ...f, contractType: e.target.value, internshipType: e.target.value === "Stage" ? f.internshipType : "" })}
+            onChange={(e) =>
+              setF({
+                ...f,
+                contractType: e.target.value,
+                internshipType: e.target.value === "Stage" ? f.internshipType : "",
+                contractEndDate: e.target.value === "Stage" ? f.contractEndDate : "",
+              })
+            }
           >
             {s.contractTypes.map((t) => (
               <option key={t}>{t}</option>
@@ -78,20 +86,31 @@ export default function AddEmployee({ companies, settings: s, onClose, onCreated
             </select>
           </Field>
         )}
-        <Field label="Date d'embauche">
+        <Field label={f.contractType === "Stage" ? "Date de début (stage)" : "Date d'embauche"}>
           <input type="date" className={inputCls} value={f.hireDate} onChange={(e) => setF({ ...f, hireDate: e.target.value })} />
         </Field>
         <Field label="Salaire brut mensuel">
           <input type="number" className={inputCls} value={f.salaryBrut} onChange={(e) => setF({ ...f, salaryBrut: e.target.value })} />
         </Field>
-        <Field label="Période d'essai (mois)">
-          <input
-            type="number"
-            className={inputCls}
-            value={f.probationMonths}
-            onChange={(e) => setF({ ...f, probationMonths: Number(e.target.value) })}
-          />
-        </Field>
+        {f.contractType === "Stage" ? (
+          <Field label="Date de fin (stage)">
+            <input
+              type="date"
+              className={inputCls}
+              value={f.contractEndDate}
+              onChange={(e) => setF({ ...f, contractEndDate: e.target.value })}
+            />
+          </Field>
+        ) : (
+          <Field label="Période d'essai (mois)">
+            <input
+              type="number"
+              className={inputCls}
+              value={f.probationMonths}
+              onChange={(e) => setF({ ...f, probationMonths: Number(e.target.value) })}
+            />
+          </Field>
+        )}
         <Field label="Département">
           <select className={inputCls} value={f.department} onChange={(e) => setF({ ...f, department: e.target.value })}>
             <option value="">—</option>
