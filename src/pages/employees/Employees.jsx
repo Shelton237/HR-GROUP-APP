@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Plus, Check, AlertTriangle, UserX, UserCheck, Trash2 } from "lucide-react";
+import { Search, Plus, Check, AlertTriangle, UserX, UserCheck, Trash2, Wallet } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Btn } from "../../components/ui/Btn";
 import { Badge } from "../../components/ui/Badge";
@@ -124,6 +124,7 @@ export default function Employees({ companyFilter, setCompanyFilter, openEmploye
               <th className="px-4 py-3 font-medium">Contrat</th>
               <th className="px-4 py-3 font-medium text-right">Brut / mois</th>
               <th className="px-4 py-3 font-medium">Dossier</th>
+              <th className="px-4 py-3 font-medium">Paiement</th>
               <th className="px-4 py-3 font-medium">Statut</th>
               <th className="px-4 py-3"></th>
             </tr>
@@ -177,6 +178,19 @@ export default function Employees({ companyFilter, setCompanyFilter, openEmploye
                     </div>
                   </td>
                   <td className="px-4 py-3">
+                    {e.payments?.[0]?.paid ? (
+                      <Badge tone="green">
+                        <Check size={12} />
+                        Payé
+                      </Badge>
+                    ) : (
+                      <Badge tone="rose">
+                        <Wallet size={12} />
+                        Non payé
+                      </Badge>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
                     {e.archived ? (
                       <Badge>Supprimé</Badge>
                     ) : e.status === "Période d'essai" ? (
@@ -218,7 +232,7 @@ export default function Employees({ companyFilter, setCompanyFilter, openEmploye
             })}
             {list.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-10 text-center text-slate-400">
                   Aucun salarié.
                 </td>
               </tr>

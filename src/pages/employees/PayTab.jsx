@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Timer, Plus, X, Info } from "lucide-react";
+import { Timer, Plus, X, Info, Wallet } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Field } from "../../components/ui/Field";
 import { Btn } from "../../components/ui/Btn";
@@ -8,6 +8,7 @@ import { inputCls, BRAND_DK } from "../../lib/tokens";
 import { fmt } from "../../lib/format";
 import {
   getEmployeePayroll,
+  getEmployeePayments,
   listOvertime,
   addOvertime,
   deleteOvertime,
@@ -16,6 +17,54 @@ import {
   updatePayVar,
   deletePayVar,
 } from "../../api/employees";
+
+// "Historique de paiement" — every month since hireDate (through the exit
+// month if the employee has since left, otherwise through today). A month
+// with no Payment row at all ("jamais traité") is surfaced as unpaid too,
+// not just months explicitly marked paid:false in Payroll.
+function PaymentHistoryCard({ employeeId }) {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    getEmployeePayments(employeeId).then((d) => {
+      if (!cancelled) setData(d);
+    }).catch(() => setData({ history: [], unpaidCount: 0, unpaidMonths: [] }));
+    return () => { cancelled = true; };
+  }, [employeeId]);
+
+  if (!data) return null;
+  const { history, unpaidCount, unpaidMonths } = data;
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+          <Wallet size={15} />
+          Historique de paiement
+        </h4>
+        {unpaidCount > 0 ? (
+          <Badge tone="rose">{unpaidCount} mois non payé{unpaidCount > 1 ? "s" : ""}</Badge>
+        ) : (
+          <Badge tone="green">À jour</Badge>
+        )}
+      </div>
+      {unpaidCount > 0 && (
+        <p className="text-xs text-rose-600 mb-3">Mois impayés : {unpaidMonths.join(", ")}</p>
+      )}
+      <div className="space-y-1 max-h-56 overflow-y-auto">
+        {history.map((h) => (
+          <div key={h.month} className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-slate-100">
+            <span className="text-slate-600 w-20 shrink-0">{h.month}</span>
+            <Badge tone={h.validated ? "teal" : "slate"}>{h.validated ? "Validé" : "Non validé"}</Badge>
+            <Badge tone={h.paid ? "green" : "rose"}>{h.paid ? "Payé" : "Non payé"}</Badge>
+            {!h.exists && <span className="text-[11px] text-slate-400 ml-auto">jamais traité</span>}
+          </div>
+        ))}
+        {history.length === 0 && <div className="text-xs text-slate-400 py-2">Aucun historique disponible.</div>}
+      </div>
+    </Card>
+  );
+}
 
 const PayLine = ({ label, value, strong, cost }) => (
   <div className="flex items-center justify-between py-1">
@@ -76,6 +125,8 @@ export default function PayTab({ e, s, ct, m, patch, employeeId, onChanged }) {
 
   return (
     <div className="space-y-5">
+      <PaymentHistoryCard employeeId={employeeId} />
+
       <div className="grid grid-cols-2 gap-3">
         <Field label="Salaire brut mensuel de base">
           <input type="number" className={inputCls} value={e.salaryBrut} onChange={(ev) => patch({ salaryBrut: Number(ev.target.value) || 0 })} />

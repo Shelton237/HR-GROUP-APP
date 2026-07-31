@@ -7,6 +7,7 @@ const { getUnjustifiedAbsenceDays } = require("../services/absenceDeduction.serv
 const { logActionForReq } = require("../services/audit.service");
 
 const uid = (p) => p + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const monthNow = () => new Date().toISOString().slice(0, 7);
 
 async function loadEmployeeOr404(id) {
   const employee = await db.Employee.findByPk(id);
@@ -41,9 +42,14 @@ const list = asyncHandler(async (req, res) => {
     where,
     order: [["lastName", "ASC"]],
     // The list view needs each employee's checklist to show dossier
-    // completeness (see EmployeeChecklistItem, "checklist" alias) without
-    // an N+1 request per row.
-    include: [{ model: db.EmployeeChecklistItem, as: "checklist" }],
+    // completeness, and the current month's Payment row to flag unpaid
+    // salaries at a glance — both fetched as separate queries (`separate:
+    // true`) since combining two hasMany includes in a single JOIN would
+    // otherwise cross-multiply their rows.
+    include: [
+      { model: db.EmployeeChecklistItem, as: "checklist", separate: true },
+      { model: db.Payment, as: "payments", where: { month: monthNow() }, required: false, separate: true },
+    ],
   });
   res.json(employees);
 });
@@ -166,6 +172,50 @@ const update = asyncHandler(async (req, res) => {
     res.locals.auditLogged = true; // avoid a redundant generic "Modification" entry for this same request
   }
   res.json(employee);
+});
+
+// "YYYY-MM" from a Date's LOCAL calendar fields — never .toISOString() here:
+// this server can run in a positive UTC-offset timezone (e.g. Africa/Lagos,
+// UTC+1), where a locally-constructed midnight-on-the-1st rolls back to the
+// previous UTC day and, on the 1st, the previous month entirely.
+const monthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+// GET /api/employees/:id/payments
+// Full payment history for this employee: one row per calendar month from
+// hireDate through the current month — or through their exit month if
+// they've since left the company, since payroll obligations stop there —
+// so gaps where Payroll was never opened for that employee/month show up as
+// unpaid too, not just months that already have a Payment row.
+const paymentsHistory = asyncHandler(async (req, res) => {
+  const employee = await loadEmployeeOr404(req.params.id);
+  assertScope(req, employee.companyId);
+
+  const now = new Date();
+  const nowMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const hireDate = employee.hireDate ? new Date(employee.hireDate) : nowMonthStart;
+  const from = new Date(hireDate.getFullYear(), hireDate.getMonth(), 1);
+
+  const exitDate = employee.exitDate ? new Date(employee.exitDate) : null;
+  const exitMonthStart = exitDate ? new Date(exitDate.getFullYear(), exitDate.getMonth(), 1) : null;
+  const to = exitMonthStart && exitMonthStart < nowMonthStart ? exitMonthStart : nowMonthStart;
+
+  const months = [];
+  for (let cursor = from; cursor <= to; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)) {
+    months.push(monthKey(cursor));
+  }
+
+  const rows = await db.Payment.findAll({ where: { employeeId: employee.id, month: { [Op.in]: months } } });
+  const byMonth = Object.fromEntries(rows.map((r) => [r.month, r]));
+
+  const history = months
+    .map((month) => {
+      const r = byMonth[month];
+      return { month, exists: !!r, validated: r?.validated || false, paid: r?.paid || false };
+    })
+    .reverse(); // most recent month first
+
+  const unpaidMonths = history.filter((h) => !h.paid).map((h) => h.month);
+  res.json({ history, unpaidCount: unpaidMonths.length, unpaidMonths });
 });
 
 const remove = asyncHandler(async (req, res) => {
@@ -561,4 +611,5 @@ module.exports = {
   updateEmergencyContact,
   removeEmergencyContact,
   payroll,
+  paymentsHistory,
 };

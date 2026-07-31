@@ -214,3 +214,17 @@ export function deleteEmergencyContact(id, contactId) {
 export function getEmployeePayroll(id, month) {
   return api.get(`/employees/${id}/payroll`, { month });
 }
+
+/**
+ * GET /employees/:id/payments
+ * resp: {
+ *   history: Array<{ month, exists, validated, paid }> (most recent first,
+ *     spanning every month from hireDate through today — or through the exit
+ *     month if the employee has since left — a month with exists:false means
+ *     Payroll was never opened for it, so it's unpaid by default),
+ *   unpaidCount: number, unpaidMonths: string[]
+ * }
+ */
+export function getEmployeePayments(id) {
+  return api.get(`/employees/${id}/payments`);
+}
