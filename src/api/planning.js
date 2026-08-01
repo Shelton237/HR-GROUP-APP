@@ -37,6 +37,15 @@ export function deletePlanningAgent(profileId) {
 export function createAgentAccount(profileId) {
   return api.post(`/planning/agents/${profileId}/account`);
 }
+/**
+ * GET /planning/employee-candidates -> Array<{ id, firstName, lastName }>
+ * Minimal, name-only employee list for the "add agent" picker — usable by
+ * every role that manages Planning (RH, Manager, Planificateur), unlike
+ * GET /employees which Planificateur has no access to at all.
+ */
+export function listEmployeeCandidates() {
+  return api.get("/planning/employee-candidates");
+}
 
 // ---------- Schedule ----------
 export function getRoomSchedule(roomId, week) {

@@ -10,8 +10,8 @@ import {
   updatePlanningAgent,
   deletePlanningAgent,
   createAgentAccount,
+  listEmployeeCandidates,
 } from "../../api/planning";
-import { listEmployees } from "../../api/employees";
 import { ApiError } from "../../api/client";
 
 export default function AgentsTab({ rooms }) {
@@ -30,7 +30,7 @@ export default function AgentsTab({ rooms }) {
     setLoading(true);
     setError("");
     try {
-      const [ag, emps] = await Promise.all([listPlanningAgents(), listEmployees()]);
+      const [ag, emps] = await Promise.all([listPlanningAgents(), listEmployeeCandidates()]);
       setAgents(ag);
       setEmployees(emps);
     } catch (e) {

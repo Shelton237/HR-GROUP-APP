@@ -20,6 +20,7 @@ router.patch("/rooms/:id", manager, rooms.update);
 router.delete("/rooms/:id", manager, rooms.destroy);
 
 // ----- Agents (planning profile attached to an existing RH employee) -----
+router.get("/employee-candidates", manager, agents.listCandidates);
 router.get("/agents", manager, agents.list);
 router.post("/agents", manager, agents.create);
 router.patch("/agents/:id", manager, agents.update);

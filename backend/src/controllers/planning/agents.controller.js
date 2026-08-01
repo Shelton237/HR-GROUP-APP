@@ -186,4 +186,18 @@ const createAccount = asyncHandler(async (req, res) => {
   res.json({ created: result.created, email_sent: result.emailSent, password: result.password, reason: result.reason });
 });
 
-module.exports = { list, create, update, destroy, createAccount };
+// GET /api/planning/employee-candidates
+// Minimal, name-only employee list for the "add agent" picker — deliberately
+// not the full GET /api/employees (dossier, salary, documents...): a
+// Planificateur account manages Planning only and must never gain a
+// backdoor into the Salariés module just to pick who to attach as an agent.
+const listCandidates = asyncHandler(async (req, res) => {
+  const employees = await db.Employee.findAll({
+    where: { status: { [Op.ne]: "Sorti" }, archived: false },
+    attributes: ["id", "firstName", "lastName"],
+    order: [["lastName", "ASC"]],
+  });
+  res.json(employees);
+});
+
+module.exports = { list, create, update, destroy, createAccount, listCandidates };
