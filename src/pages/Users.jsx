@@ -10,7 +10,7 @@ import { listUsers, createUser, updateUser, deleteUser, resetUserPassword } from
 import { listCompanies } from "../api/companies";
 import { ApiError } from "../api/client";
 
-const ROLES = ["Admin", "RH", "Operateur", "Manager", "Lecture", "Agent"];
+const ROLES = ["Admin", "RH", "Operateur", "Manager", "Lecture", "Agent", "Planificateur"];
 const ROLE_BADGE = {
   Admin: "rose",
   RH: "green",
@@ -18,6 +18,7 @@ const ROLE_BADGE = {
   Manager: "amber",
   Lecture: "slate",
   Agent: "teal",
+  Planificateur: "violet",
 };
 
 function emptyForm() {

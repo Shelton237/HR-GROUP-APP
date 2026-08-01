@@ -26,8 +26,11 @@ export default function App() {
   // backend's requireRole()/blockOperateur gates) — bounce off any of these
   // the moment we know the role, since `view` was initialized before the
   // user (and their role) had loaded.
+  // "Planificateur" is the mirror image: Planning only, nothing else — see
+  // blockPlanificateur, applied to every other module's routes.
   useEffect(() => {
     if (user?.role === "Operateur" && (view === "dashboard" || view === "planning")) setView("employees");
+    if (user?.role === "Planificateur" && view !== "planning") setView("planning");
     if (user?.role !== "Admin" && view === "users") setView("employees");
   }, [user, view]);
 
@@ -61,6 +64,7 @@ export default function App() {
         view={view}
         onNavigate={navigate}
         nav={NAV.filter((n) => {
+          if (user?.role === "Planificateur") return n.id === "planning";
           if (user?.role === "Operateur" && (n.id === "dashboard" || n.id === "planning")) return false;
           if (n.id === "users" && user?.role !== "Admin") return false;
           return true;

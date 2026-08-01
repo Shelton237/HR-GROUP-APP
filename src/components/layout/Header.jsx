@@ -49,9 +49,9 @@ function NotificationBell({ view, onGoto }) {
   const rootRef = useRef(null);
 
   const reload = () => {
-    // Operateur has no access to /api/dashboard/* — skip the call entirely
-    // rather than surface a 403 in the console.
-    if (user?.role === "Operateur") {
+    // Operateur and Planificateur have no access to /api/dashboard/* — skip
+    // the call entirely rather than surface a 403 in the console.
+    if (user?.role === "Operateur" || user?.role === "Planificateur") {
       setAlerts([]);
       return;
     }
@@ -74,7 +74,7 @@ function NotificationBell({ view, onGoto }) {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [open]);
 
-  if (user?.role === "Operateur") return null;
+  if (user?.role === "Operateur" || user?.role === "Planificateur") return null;
 
   const handleSelect = (a) => {
     setOpen(false);

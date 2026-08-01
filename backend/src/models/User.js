@@ -16,8 +16,12 @@ module.exports = (sequelize, DataTypes) => {
       // middlewares/auth.js, which treats it as an RH alias) — the only
       // difference is it never sees the consolidated Dashboard, only its
       // scoped companies' day-to-day data.
+      // "Planificateur" is the mirror image: access to the Planning module
+      // ONLY, blocked from every other module (Salariés, Paie, Congés,
+      // Paramètres, Dashboard, Utilisateurs...) — see blockPlanificateur in
+      // middlewares/auth.js, applied to every non-Planning router.
       role: {
-        type: DataTypes.ENUM("Admin", "RH", "Manager", "Lecture", "Agent", "Operateur"),
+        type: DataTypes.ENUM("Admin", "RH", "Manager", "Lecture", "Agent", "Operateur", "Planificateur"),
         allowNull: false,
         defaultValue: "Lecture",
       },

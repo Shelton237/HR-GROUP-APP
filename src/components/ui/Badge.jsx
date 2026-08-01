@@ -6,6 +6,7 @@ export function Badge({ children, tone = "slate" }) {
     rose: "bg-rose-50 text-rose-700",
     teal: "bg-[#E31E3D]/10 text-[#AA172E]",
     blue: "bg-sky-50 text-sky-700",
+    violet: "bg-violet-50 text-violet-700",
   };
   return (
     <span className={"inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium " + t[tone]}>

@@ -80,6 +80,16 @@ function blockOperateur(req, res, next) {
   next();
 }
 
+/**
+ * "Planificateur" is the mirror image of Operateur: a role dedicated
+ * entirely to the Planning module, with no business in any other one.
+ * Applied to every router except planning.routes.js.
+ */
+function blockPlanificateur(req, res, next) {
+  if (req.user?.role === "Planificateur") return next(new ApiError(403, "Ce compte n'a accès qu'au module Planning."));
+  next();
+}
+
 /** "Lecture" is a read-only role; blocks it from any mutating request. */
 function blockReadOnly(req, res, next) {
   if (!req.user) return next(new ApiError(401, "Authentification requise."));
@@ -128,6 +138,7 @@ module.exports = {
   requireRole,
   requireSelfEmployee,
   blockOperateur,
+  blockPlanificateur,
   blockReadOnly,
   hasCompanyScope,
   scopedCompanyIds,

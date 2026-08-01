@@ -11,7 +11,7 @@ const me = require("../controllers/planning/me.controller");
 // modules where it mirrors RH's permissions, this one is fully off-limits.
 router.use(authenticate, blockOperateur, blockReadOnly);
 
-const manager = requireRole("RH", "Manager");
+const manager = requireRole("RH", "Manager", "Planificateur");
 
 // ----- Rooms -----
 router.get("/rooms", manager, rooms.list);

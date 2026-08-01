@@ -1,8 +1,8 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/countries.controller");
-const { authenticate, requireRole, blockReadOnly } = require("../middlewares/auth");
+const { authenticate, requireRole, blockReadOnly, blockPlanificateur } = require("../middlewares/auth");
 
-router.use(authenticate, blockReadOnly);
+router.use(authenticate, blockReadOnly, blockPlanificateur);
 
 router.get("/", ctrl.list);
 router.get("/:code", ctrl.getOne);
