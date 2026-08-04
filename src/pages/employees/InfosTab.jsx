@@ -1,18 +1,41 @@
 import { useEffect, useState } from "react";
-import { Phone, Plus, Trash2 } from "lucide-react";
+import { Phone, Plus, Trash2, Building2 } from "lucide-react";
 import { Field } from "../../components/ui/Field";
 import { Btn } from "../../components/ui/Btn";
 import { inputCls } from "../../lib/tokens";
 import { listEmployees, addEmergencyContact, updateEmergencyContact, deleteEmergencyContact } from "../../api/employees";
+import { listCompanies } from "../../api/companies";
+import { useAuth } from "../../auth/useAuth";
 
 export default function InfosTab({ e, s, patch, employeeId, onChanged }) {
+  const { user } = useAuth();
   const [colleagues, setColleagues] = useState([]);
+  const [companies, setCompanies] = useState([]);
   useEffect(() => {
     listEmployees().then((list) => setColleagues(list || []));
+    if (user?.role === "Admin") listCompanies().then((list) => setCompanies(list || []));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const set = (k, v) => patch({ [k]: v });
   const cnt = e.emergencyContacts || [];
+
+  const currentCompany = companies.find((c) => c.id === e.companyId);
+  const transferCompany = (newCompanyId) => {
+    if (!newCompanyId || newCompanyId === e.companyId) return;
+    const target = companies.find((c) => c.id === newCompanyId);
+    const crossCountry = target && currentCompany && target.countryCode !== currentCompany.countryCode;
+    const msg =
+      `Transférer ${e.firstName} ${e.lastName} vers ${target?.name} ?` +
+      (crossCountry
+        ? `\n\n⚠️ Changement de pays (${currentCompany.countryCode} → ${target.countryCode}) : le salaire (${e.salaryBrut}) reste inchangé tel quel — pense à le corriger manuellement dans la devise du nouveau pays. La checklist de dossier sera complétée avec les pièces requises dans le nouveau pays, sans rien supprimer de l'existant.`
+        : "");
+    if (!confirm(msg)) return;
+    set("companyId", newCompanyId);
+    // The transfer can also touch the checklist server-side — refetch the
+    // full employee rather than trust the generic optimistic patch() here.
+    setTimeout(() => onChanged?.(), 300);
+  };
 
   const addContact = () => addEmergencyContact(employeeId, { name: "", relationship: "", phone: "", phone2: "", address: "" }).then(onChanged);
   const patchContact = (i, fields) => {
@@ -98,6 +121,21 @@ export default function InfosTab({ e, s, patch, employeeId, onChanged }) {
       <div>
         <h4 className="text-sm font-semibold text-slate-700 mb-3">Poste & rattachement</h4>
         <div className="grid grid-cols-3 gap-3">
+          {user?.role === "Admin" && (
+            <Field label="Société">
+              <select className={inputCls} value={e.companyId} onChange={(ev) => transferCompany(ev.target.value)}>
+                {companies.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.countryCode})
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+                <Building2 size={11} />
+                Transfert immédiat, sans recréer le dossier — réservé aux administrateurs.
+              </p>
+            </Field>
+          )}
           <Field label="Type de contrat">
             <select
               className={inputCls}

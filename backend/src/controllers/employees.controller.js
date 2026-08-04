@@ -152,10 +152,42 @@ const update = asyncHandler(async (req, res) => {
   const employee = await loadEmployeeOr404(req.params.id);
   assertScope(req, employee.companyId);
   const body = req.body || {};
-  if (body.companyId && body.companyId !== employee.companyId) {
-    const company = await db.Company.findByPk(body.companyId);
-    if (!company) throw new ApiError(400, "Société inconnue.");
-    assertScope(req, company.id);
+
+  // Transferring a company is deliberately narrower than the general
+  // RH/Manager PUT permission: only Admin can move a whole dossier across
+  // companies (and possibly countries) — everything else on this employee
+  // stays editable by RH/Manager as before.
+  const isTransfer = body.companyId !== undefined && body.companyId !== employee.companyId;
+  let transferInfo = null;
+  if (isTransfer) {
+    if (req.user.role !== "Admin") {
+      throw new ApiError(403, "Seul un administrateur peut transférer un salarié vers une autre société.");
+    }
+    const newCompany = await db.Company.findByPk(body.companyId);
+    if (!newCompany) throw new ApiError(400, "Société inconnue.");
+    assertScope(req, newCompany.id);
+
+    const oldCompany = await db.Company.findByPk(employee.companyId);
+    const countryChanged = oldCompany && oldCompany.countryCode !== newCompany.countryCode;
+    transferInfo = { oldCompany, newCompany, countryChanged };
+
+    // Nothing about the dossier itself (evaluations, warnings, documents,
+    // overtime, pay-vars, emergency contacts, leave balance...) is touched —
+    // only the company pointer moves. The one thing that genuinely differs
+    // by country is the onboarding checklist template: top up any items the
+    // new country requires that this employee doesn't have yet, without
+    // touching/deleting whatever they already have from the old one.
+    if (countryChanged) {
+      const newCountry = await db.Country.findByPk(newCompany.countryCode);
+      if (newCountry && Array.isArray(newCountry.checklistJson)) {
+        const existing = await db.EmployeeChecklistItem.findAll({ where: { employeeId: employee.id } });
+        const existingKeys = new Set(existing.map((c) => c.key));
+        const missing = newCountry.checklistJson.filter((c) => !existingKeys.has(c.key));
+        if (missing.length) {
+          await db.EmployeeChecklistItem.bulkCreate(missing.map((c) => ({ employeeId: employee.id, key: c.key, done: false })));
+        }
+      }
+    }
   }
 
   // An Operateur can't change salary directly — mistakes there need Admin
@@ -202,6 +234,18 @@ const update = asyncHandler(async (req, res) => {
       detail: `${employee.firstName} ${employee.lastName} — ${previousStatus} → ${employee.status}`,
     });
     res.locals.auditLogged = true; // avoid a redundant generic "Modification" entry for this same request
+  }
+  if (transferInfo) {
+    const { oldCompany, newCompany, countryChanged } = transferInfo;
+    await logActionForReq(req, {
+      action: "Transfert",
+      entityType: "Salariés",
+      entityId: employee.id,
+      detail:
+        `${employee.firstName} ${employee.lastName} — ${oldCompany?.name || employee.companyId} → ${newCompany.name}` +
+        (countryChanged ? ` (changement de pays : ${oldCompany?.countryCode} → ${newCompany.countryCode})` : ""),
+    });
+    res.locals.auditLogged = true;
   }
   res.json({ ...employee.toJSON(), salaryRequestPending });
 });
