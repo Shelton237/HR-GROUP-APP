@@ -60,6 +60,11 @@ const update = asyncHandler(async (req, res) => {
 const remove = asyncHandler(async (req, res) => {
   const company = await db.Company.findByPk(req.params.id);
   if (!company) throw new ApiError(404, "Société introuvable.");
+  // Redundant with the route's Admin-only gate today, but every other
+  // handler in this file checks scope independently of its route — keeping
+  // this one consistent means it stays safe even if the route is ever
+  // relaxed to RH/Manager.
+  if (!hasCompanyScope(req.user, company.id)) throw new ApiError(403, "Hors périmètre d'accès.");
   const employeeCount = await db.Employee.count({ where: { companyId: company.id } });
   if (employeeCount > 0) throw new ApiError(409, "Impossible de supprimer une société avec des salariés.");
   await company.destroy();
