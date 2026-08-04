@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Phone, Plus, Trash2, Building2 } from "lucide-react";
+import { Phone, Plus, Trash2, Building2, AlertTriangle, ArrowRight } from "lucide-react";
 import { Field } from "../../components/ui/Field";
 import { Btn } from "../../components/ui/Btn";
-import { inputCls } from "../../lib/tokens";
+import { Modal } from "../../components/ui/Modal";
+import { inputCls, AMBER, BRAND_DK } from "../../lib/tokens";
 import { listEmployees, addEmergencyContact, updateEmergencyContact, deleteEmergencyContact } from "../../api/employees";
 import { listCompanies } from "../../api/companies";
 import { useAuth } from "../../auth/useAuth";
@@ -11,6 +12,8 @@ export default function InfosTab({ e, s, patch, employeeId, onChanged }) {
   const { user } = useAuth();
   const [colleagues, setColleagues] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [pendingTransfer, setPendingTransfer] = useState(null); // { target, crossCountry } | null
+  const [transferring, setTransferring] = useState(false);
   useEffect(() => {
     listEmployees().then((list) => setColleagues(list || []));
     if (user?.role === "Admin") listCompanies().then((list) => setCompanies(list || []));
@@ -21,20 +24,25 @@ export default function InfosTab({ e, s, patch, employeeId, onChanged }) {
   const cnt = e.emergencyContacts || [];
 
   const currentCompany = companies.find((c) => c.id === e.companyId);
-  const transferCompany = (newCompanyId) => {
+  const requestTransfer = (newCompanyId) => {
     if (!newCompanyId || newCompanyId === e.companyId) return;
     const target = companies.find((c) => c.id === newCompanyId);
-    const crossCountry = target && currentCompany && target.countryCode !== currentCompany.countryCode;
-    const msg =
-      `Transférer ${e.firstName} ${e.lastName} vers ${target?.name} ?` +
-      (crossCountry
-        ? `\n\n⚠️ Changement de pays (${currentCompany.countryCode} → ${target.countryCode}) : le salaire (${e.salaryBrut}) reste inchangé tel quel — pense à le corriger manuellement dans la devise du nouveau pays. La checklist de dossier sera complétée avec les pièces requises dans le nouveau pays, sans rien supprimer de l'existant.`
-        : "");
-    if (!confirm(msg)) return;
-    set("companyId", newCompanyId);
-    // The transfer can also touch the checklist server-side — refetch the
-    // full employee rather than trust the generic optimistic patch() here.
-    setTimeout(() => onChanged?.(), 300);
+    if (!target) return;
+    const crossCountry = !!(currentCompany && target.countryCode !== currentCompany.countryCode);
+    setPendingTransfer({ target, crossCountry });
+  };
+  const confirmTransfer = async () => {
+    if (!pendingTransfer) return;
+    setTransferring(true);
+    try {
+      set("companyId", pendingTransfer.target.id);
+      setPendingTransfer(null);
+      // The transfer can also touch the checklist server-side — refetch the
+      // full employee rather than trust the generic optimistic patch() here.
+      setTimeout(() => onChanged?.(), 300);
+    } finally {
+      setTransferring(false);
+    }
   };
 
   const addContact = () => addEmergencyContact(employeeId, { name: "", relationship: "", phone: "", phone2: "", address: "" }).then(onChanged);
@@ -123,7 +131,7 @@ export default function InfosTab({ e, s, patch, employeeId, onChanged }) {
         <div className="grid grid-cols-3 gap-3">
           {user?.role === "Admin" && (
             <Field label="Société">
-              <select className={inputCls} value={e.companyId} onChange={(ev) => transferCompany(ev.target.value)}>
+              <select className={inputCls} value={e.companyId} onChange={(ev) => requestTransfer(ev.target.value)}>
                 {companies.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} ({c.countryCode})
@@ -278,6 +286,59 @@ export default function InfosTab({ e, s, patch, employeeId, onChanged }) {
           <p className="text-xs text-slate-400 mt-2">Ces champs se gèrent dans « Paramètres → Champs personnalisés ».</p>
         </div>
       )}
+
+      <Modal open={!!pendingTransfer} onClose={() => setPendingTransfer(null)} title="Transférer ce salarié">
+        {pendingTransfer && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex-1 rounded-lg border border-slate-200 p-3 text-center">
+                <div className="text-[11px] text-slate-400 mb-0.5">Actuellement</div>
+                <div className="font-semibold text-slate-800">{currentCompany?.name}</div>
+                <div className="text-xs text-slate-500">{currentCompany?.countryCode}</div>
+              </div>
+              <ArrowRight size={18} className="text-slate-300 shrink-0" />
+              <div className="flex-1 rounded-lg border-2 p-3 text-center" style={{ borderColor: BRAND_DK }}>
+                <div className="text-[11px] text-slate-400 mb-0.5">Nouvelle société</div>
+                <div className="font-semibold" style={{ color: BRAND_DK }}>
+                  {pendingTransfer.target.name}
+                </div>
+                <div className="text-xs text-slate-500">{pendingTransfer.target.countryCode}</div>
+              </div>
+            </div>
+
+            <p className="text-sm text-slate-600">
+              <strong>
+                {e.firstName} {e.lastName}
+              </strong>{" "}
+              va être transféré{"·"}e vers <strong>{pendingTransfer.target.name}</strong>. Le dossier complet — évaluations,
+              avertissements, documents, congés, heures sup., historique de paie — reste intact, seule la société change.
+            </p>
+
+            {pendingTransfer.crossCountry && (
+              <div className="flex gap-2 p-3 rounded-lg border" style={{ borderColor: AMBER, background: "#FFFBEB" }}>
+                <AlertTriangle size={16} className="shrink-0 mt-0.5" style={{ color: AMBER }} />
+                <div className="text-xs text-amber-900 space-y-1">
+                  <p>
+                    <strong>Changement de pays</strong> ({currentCompany?.countryCode} → {pendingTransfer.target.countryCode}) : le
+                    salaire ({e.salaryBrut?.toLocaleString("fr-FR")}, dans la devise de {currentCompany?.countryCode}) reste
+                    inchangé tel quel — pense à le corriger manuellement dans la devise du nouveau pays.
+                  </p>
+                  <p>La checklist de dossier sera complétée avec les pièces requises dans le nouveau pays, sans rien supprimer de l'existant.</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Btn variant="ghost" onClick={() => setPendingTransfer(null)}>
+                Annuler
+              </Btn>
+              <Btn onClick={confirmTransfer} disabled={transferring}>
+                {transferring ? "Transfert…" : "Confirmer le transfert"}
+              </Btn>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
