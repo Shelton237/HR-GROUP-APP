@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Plus, Check, AlertTriangle, UserX, UserCheck, Trash2, Wallet, Building2 } from "lucide-react";
+import { Search, Plus, Check, AlertTriangle, UserX, UserCheck, Trash2, Wallet, Building2, Briefcase } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Btn } from "../../components/ui/Btn";
 import { Badge } from "../../components/ui/Badge";
@@ -21,6 +21,7 @@ export default function Employees({ companyFilter, setCompanyFilter, openEmploye
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [contractFilter, setContractFilter] = useState("");
   const [detail, setDetail] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
   const [deactivateTarget, setDeactivateTarget] = useState(null);
@@ -76,8 +77,28 @@ export default function Employees({ companyFilter, setCompanyFilter, openEmploye
     load();
   };
 
+  // "Stage:Académique"/"Stage:Professionnel" narrow to the internship
+  // subtype on top of contractType — encoded as a single select value so the
+  // dropdown stays flat instead of needing a second, dependent filter.
+  const contractOptions = [];
+  for (const t of settings?.contractTypes || []) {
+    contractOptions.push({ value: t, label: t });
+    if (t === "Stage") {
+      contractOptions.push({ value: "Stage:Académique", label: "— Stage académique" });
+      contractOptions.push({ value: "Stage:Professionnel", label: "— Stage professionnel" });
+    }
+  }
+
   const list = employees.filter((e) => {
     if (companyFilter && e.companyId !== companyFilter) return false;
+    if (contractFilter) {
+      if (contractFilter.includes(":")) {
+        const [ct, sub] = contractFilter.split(":");
+        if (e.contractType !== ct || e.internshipType !== sub) return false;
+      } else if (e.contractType !== contractFilter) {
+        return false;
+      }
+    }
     const q = search.toLowerCase();
     return !q || `${e.firstName} ${e.lastName} ${e.poste}`.toLowerCase().includes(q);
   });
@@ -112,6 +133,21 @@ export default function Employees({ companyFilter, setCompanyFilter, openEmploye
             {companies.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="relative">
+          <Briefcase size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <select
+            className={inputClsAuto + " pl-8 w-56"}
+            value={contractFilter}
+            onChange={(e) => setContractFilter(e.target.value)}
+          >
+            <option value="">Tous les contrats</option>
+            {contractOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
               </option>
             ))}
           </select>
